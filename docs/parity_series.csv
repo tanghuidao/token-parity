@@ -1,2 +1,2 @@
 date,btc_price_usd,hashprice_usd_per_ph_day,fleet_efficiency_j_per_th,epsilon_btc_gwh,basket_price_usd_per_mtok,basket_j_per_token,R_M,R_A,Lambda,Omega,rho_parity_tok_per_btc,rho_market_tok_per_btc,source
-2026-08-16,63067.00,31.5147,20.0,0.9606,11.4360,2.200,0.065656,15.4088,234.69,5.4583,1.4801e+12,6.3067e+09,live
+2026-08-16,63041.00,31.5558,20.0,0.9589,11.4360,2.200,0.065741,15.4088,234.38,5.4570,1.4776e+12,6.3041e+09,live
