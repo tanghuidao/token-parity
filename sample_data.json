@@ -1,0 +1,12 @@
+{
+  "_comment": "离线验算数据。挖矿侧三个数取自 Hashrate Index 2026-08-10 周报：BTC≈$64,033、周奖励约3158 BTC(→日均451)、由 hashprice $31.73 反推全网算力≈0.91 ZH/s。推理侧价格为占位示例（美元/输出token），在线模式会被 OpenRouter 实时报价取代。",
+  "btc_price_usd": 64033,
+  "network_hashrate_hps": 9.1e20,
+  "daily_block_reward_btc": 451.0,
+  "model_prices_usd_per_token": {
+    "anthropic/claude-sonnet-4.6": 3.0e-6,
+    "openai/gpt-5.2": 2.5e-6,
+    "google/gemini-3-flash": 4.0e-7,
+    "deepseek/deepseek-v4": 5.0e-7
+  }
+}

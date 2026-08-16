@@ -1,0 +1,36 @@
+name: daily-parity-index
+
+on:
+  schedule:
+    - cron: "10 0 * * *"   # UTC 00:10 = 北京时间 08:10，每天一次
+  workflow_dispatch:        # 允许在 Actions 页面手动触发（首次部署时用）
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests matplotlib
+
+      - name: Fetch data and compute index
+        run: python parity_index.py --plot
+
+      - name: Build static site
+        run: python build_site.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "parity-bot"
+          git config user.email "parity-bot@users.noreply.github.com"
+          git add parity_series.csv parity_index.png docs/
+          git commit -m "daily update $(date -u +%F)" || echo "no changes to commit"
+          git push
