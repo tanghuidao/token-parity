@@ -80,6 +80,21 @@ python parity_index.py --dry-run          # 实时抓取计算，只打印不写
 
 本机制已搭好，当前 v1 系数为 1.0，两列数值相同属正常。
 
+## 质量分口径（quality_score）
+
+Ω 的质量侧校准使用 Artificial Analysis 的 Intelligence Index 综合分
+（https://artificialanalysis.ai/models，当前指数版本 v4.1.1），作为独立于
+价格的质量度量。口径与维护规则：
+
+- **选档口径**：取该模型"各档位中 AA 已评测的最高 reasoning 档"分数
+  （如 GPT-5.5 xhigh、Claude Sonnet 5 Max Effort、Gemini 3.7 Flash high、
+  DeepSeek V4 Pro Max Effort），因为多数模型只有最高档被 AA 完整评测。
+- **记录位置**：分数写在 `parity_index.py` 的 `inference_basket` 每项
+  `quality_score` 后的行内注释里，含变体全名、指数版本、查询日期、口径。
+- **季度复查**：每季度由项目所有者复查一次，确认 AA 是否更新分数或改版。
+- **变更登记**：AA 指数改版或任一模型分数更新时，在 `docs/changelog.md`
+  记一行：日期 + 模型 + 新旧分数（如 `2026-11-15 | GPT-5.5 | 56 -> 58 (AA v4.2)`）。
+
 ## 数据源
 
 | 数据 | 来源 | 更新方式 |

@@ -73,16 +73,21 @@ DEFAULT_CONFIG = {
     # quality_ref   是否作为质量基准模型（恰好一个为 true）
     # quality_score 该模型的外部基准综合分（如 Artificial Analysis Intelligence Index），
     #               必须来自价格以外的独立评测源。全部模型都有分数时 Ω 才会计算。
-    #               由项目所有者手动季度更新。初始填 None 表示尚未提供。
+    #               口径: 各模型最高已评 reasoning 档（AA Index v4.1.1，2026-08-16 查询）。
+    #               由项目所有者手动季度复查；分数更新须在 docs/changelog.md 记一行。
     "inference_basket": [
         {"id": "anthropic/claude-sonnet-5",       "weight": 0.30, "j_per_token": 3.0,
-         "quality_ref": True, "quality_score": None},
+         "quality_ref": True, "quality_score": 55,  # 变体 Claude Sonnet 5 (Adaptive Reasoning, Max Effort) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
+        },
         {"id": "openai/gpt-5.5",                  "weight": 0.25, "j_per_token": 3.0,
-         "quality_score": None},
+         "quality_score": 56,  # 变体 GPT-5.5 (xhigh) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
+        },
         {"id": "google/gemini-3.7-flash",         "weight": 0.25, "j_per_token": 1.0,
-         "quality_score": None},
+         "quality_score": 56,  # 变体 Gemini 3.7 Flash (high) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
+        },
         {"id": "deepseek/deepseek-v4-pro",        "weight": 0.20, "j_per_token": 1.5,
-         "quality_score": None},
+         "quality_score": 53,  # 变体 DeepSeek V4 Pro 0813 (Reasoning, Max Effort) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
+        },
     ],
     # 篮子里某个模型在 OpenRouter 下架时的策略："skip"（剔除并重新归一化）或 "fail"
     "missing_model_policy": "skip",
