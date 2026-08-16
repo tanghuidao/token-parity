@@ -52,6 +52,34 @@ python parity_index.py --config my.json   # 覆盖默认配置
 ```
 同一天重复运行会覆盖当日行，序列保持干净。
 
+`--dry-run` 参数只计算打印不写 CSV，用于换篮子时的新旧对比：
+
+```bash
+python parity_index.py --dry-run          # 实时抓取计算，只打印不写入
+```
+
+## 如何更换篮子（Λ 链式接续）
+
+模型篮子会随 OpenRouter 上下架频繁变化，Λ 的绝对水平对篮子极敏感。
+为保证正式序列衡量"变动"而非"篮子水平"，参照 CPI 的链式接续法：
+
+1. 仓库根目录维护 `chain_factors.json`，结构 `{"v1": 1.0, "v2": <系数>, ...}`，
+   每个版本对应 `DEFAULT_CONFIG` 里的 `basket_version`。
+2. **换篮当天**，先把 `basket_version` 递增为 v2（修改篮子 id / weight / j_per_token 后），
+   分别用旧配置和新配置各跑一次 `--dry-run`：
+   ```bash
+   # 旧配置（v1）
+   git stash && python parity_index.py --dry-run   # 记下输出的 Λ_raw(旧)
+   # 新配置（v2）
+   git stash pop && python parity_index.py --dry-run  # 记下输出的 Λ_raw(新)
+   ```
+3. 计算系数：`chain_factor_v2 = Λ_chained(旧) ÷ Λ_raw(新)`，
+   把该系数写入 `chain_factors.json` 的 `"v2"` 键后再正式提交切换。
+4. 切换后 `Lambda_chained = Lambda × chain_factor_v2`，与 v1 序列无缝衔接。
+5. 网页图表与一切分析使用 `Lambda_chained` 列，不用原始 `Lambda`。
+
+本机制已搭好，当前 v1 系数为 1.0，两列数值相同属正常。
+
 ## 数据源
 
 | 数据 | 来源 | 更新方式 |

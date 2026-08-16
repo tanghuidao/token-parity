@@ -4,9 +4,9 @@
   "network_hashrate_hps": 9.1e20,
   "daily_block_reward_btc": 451.0,
   "model_prices_usd_per_token": {
-    "anthropic/claude-sonnet-4.6": 3.0e-6,
-    "openai/gpt-5.2": 2.5e-6,
-    "google/gemini-3-flash": 4.0e-7,
-    "deepseek/deepseek-v4": 5.0e-7
+    "anthropic/claude-sonnet-5": 3.0e-6,
+    "openai/gpt-5.5": 2.5e-6,
+    "google/gemini-3.7-flash": 4.0e-7,
+    "deepseek/deepseek-v4-pro": 5.0e-7
   }
 }

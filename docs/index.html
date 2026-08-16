@@ -69,6 +69,9 @@ section.charts { margin-top: 36px; }
 .chartbox { background: var(--card); border: 1px solid rgba(31,42,38,.14); padding: 14px; }
 .chartbox h3 { font-family: var(--mono); font-size: 13px; font-weight: 600; margin-bottom: 8px; }
 .fallback img { width: 100%; border: 1px solid rgba(31,42,38,.14); }
+.collecting { font-family: var(--mono); font-size: 13px; color: var(--faint);
+  text-align: center; padding: 34px 10px; }
+.collecting .bigval { display: block; font-size: 26px; font-weight: 600; margin-top: 12px; }
 
 /* 方法论 */
 details { margin-top: 36px; background: var(--card);
@@ -107,26 +110,26 @@ footer a { color: var(--faint); }
     <div class="pin mine" style="left:27.3%"><b>挖矿 $0.066</b></div>
     <div class="pin infer" style="left:98.0%"><b>推理 $15.41</b></div>
   </div>
-  <div class="verdict">当前能量套利比 <strong>Λ = 234.4</strong>：一度电喂给推理的毛收入是喂给挖矿的 234 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
+  <div class="verdict">当前能量套利比 <strong>Λ = 233.9</strong>：一度电喂给推理的毛收入是喂给挖矿的 234 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
 </div>
 
 <div class="cards">
   <div class="card"><div class="k">R_M · 挖矿每度电毛收入</div>
-    <div class="v copper">$0.0657</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 队列能耗</div></div>
+    <div class="v copper">$0.0659</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
   <div class="card"><div class="k">R_A · 推理每度电毛收入</div>
     <div class="v cobalt">$15.41</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
   <div class="card"><div class="k">Λ · 能量套利比</div>
-    <div class="v graphite">234.4</div><div class="d">R_A / R_M，毛收入口径</div></div>
+    <div class="v graphite">233.9</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
   <div class="card"><div class="k">Ω · 平价偏离指数</div>
-    <div class="v oxblood">5.457</div><div class="d">ln(焦耳平价汇率 / 市场隐含汇率)，防御性 vs 生产性耗散的定价缺口</div></div>
+    <div class="v oxblood">待质量基准数据上线</div><div class="d">Pending quality benchmark · 待外部评测分（quality_score）上线后自动恢复</div></div>
 </div>
 
 <section class="charts">
   <div class="chart-grid" id="jscharts">
-    <div class="chartbox"><h3 style="color:var(--copper)">R_M（$/kWh）</h3><canvas id="c_rm"></canvas></div>
-    <div class="chartbox"><h3 style="color:var(--cobalt)">R_A（$/kWh）</h3><canvas id="c_ra"></canvas></div>
-    <div class="chartbox"><h3 style="color:var(--graphite)">Λ 能量套利比</h3><canvas id="c_l"></canvas></div>
-    <div class="chartbox"><h3 style="color:var(--oxblood)">Ω 平价偏离指数</h3><canvas id="c_o"></canvas></div>
+    <div class="chartbox"><h3 style="color:var(--copper)">R_M（$/kWh）</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--copper)">0.0659</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--cobalt)">R_A（$/kWh）</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--cobalt)">15.41</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--graphite)">Λ 能量套利比</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--graphite)">233.9</span></div></div>
+    
   </div>
   <noscript><div class="fallback"><img src="parity_index.png" alt="指数历史曲线"></div></noscript>
   <div class="fallback" id="pngfallback" style="display:none"><img src="parity_index.png" alt="指数历史曲线"></div>
@@ -134,23 +137,25 @@ footer a { color: var(--faint); }
 
 <details>
   <summary>方法论与口径</summary>
-  <p style="margin-top:10px">挖矿侧：<code>hashprice = 近144块总奖励(BTC) × BTC价格 ÷ 全网算力(PH/s)</code>，再除以每 PH/s 的日耗电（队列能效 × 24h）得 R_M。单枚 BTC 体现能 ε = 全网日耗能 ÷ 日产出。</p>
-  <p>推理侧：模型篮子按用量加权；质量折算采用"升贴水法"（仿原油基准分级）——以基准模型价格为 1，其他模型质量权重 = 其价格 ÷ 基准价，质量调整落在数量侧。</p>
+  <p style="margin-top:10px">挖矿侧：<code>hashprice = 近144块总奖励(BTC) × BTC价格 ÷ 全网算力(PH/s)</code>，再除以每 PH/s 的日耗电（全网加权能效 × 24h）得 R_M。单枚 BTC 体现能 ε = 全网日耗能 ÷ 日产出。</p>
+  <p>推理侧：模型篮子按用量加权；质量折算采用"升贴水法"——以基准模型的 <code>quality_score</code>（来自价格以外的独立评测源，如 Artificial Analysis Intelligence Index）为 1，其他模型质量权重 = 其 quality_score ÷ 基准分。当篮子模型尚未提供 quality_score 时，质量权重一律置 1，Ω 与 ρ* 暂不计算（页面显示"待质量基准数据上线"）。</p>
   <p>Ω 的含义：比特币的能量用于"设防"（不可伪造的耗费），AI token 的能量用于"生产"。Ω 度量市场为这两种耗散支付的每焦耳价格之差，其<b>时间变化</b>比水平值更可信。</p>
   <ul>
-    <li>队列能效与单 token 能耗为手动参数（参考 CBECI / Epoch AI），是主要误差源；</li>
+    <li><b>全网加权能耗（fleet-weighted energy efficiency）</b>：全网矿机按算力加权的平均能效，单位 J/TH，数据来源 CBECI / Hashrate Index，季度手动更新；</li>
+    <li>全网加权能效与单 token 能耗为手动参数（参考 CBECI / Epoch AI），是主要误差源；</li>
     <li>Λ 为毛收入口径，非利润口径——推理侧成本大头是 GPU 折旧而非电费；</li>
-    <li>篮子成分变更采用环比拼接，换基日期记录于仓库提交历史。</li>
+    <li>篮子成分变更采用链式接续（chain-linking），系数记录于仓库根目录 <code>chain_factors.json</code>，换基日期记录于提交历史。</li>
   </ul>
 </details>
 
 <footer>
   丰裕学（Abundantics）研究项目 · 指数定义与代码开源，非投资建议 ·
   <a href="parity_series.csv">下载完整序列 CSV</a>
+  <div style="margin-top:6px">TEPI — Token Energy Parity Index. Daily revenue per kWh of Bitcoin mining (R_M) vs AI inference (R_A). Open data &amp; code · <a href="parity_series.csv">Download CSV</a></div>
 </footer>
 </div>
 
-<script>window.__PARITY__ = {"dates": ["2026-08-16"], "series": {"R_M": [0.065741], "R_A": [15.4088], "Lambda": [234.38], "Omega": [5.457]}};</script>
+<script>window.__PARITY__ = {"dates": ["2026-08-16"], "series": {"R_M": [0.06587], "R_A": [15.4088], "Lambda": [233.93], "Omega": [null]}};</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
         onerror="document.getElementById('jscharts').style.display='none';document.getElementById('pngfallback').style.display='block';"></script>
 <script>
@@ -171,11 +176,14 @@ footer a { color: var(--faint); }
     }
   };
   function draw(id, key, color) {
+    var el = document.getElementById(id);
+    if (!el) return;  // 稀疏模式或 Ω 待基准时该 canvas 不存在，跳过
     var cfg = JSON.parse(JSON.stringify(base));
     cfg.data = { labels: D.dates, datasets: [{
       data: D.series[key], borderColor: color, backgroundColor: color,
       borderWidth: 1.8, pointRadius: D.dates.length > 60 ? 0 : 2.5, tension: 0.15 }] };
-    new Chart(document.getElementById(id), cfg);
+    // 稀疏序列（<5 点）关闭自动缩放到孤点的折线：spanGaps + 固定小 padding
+    new Chart(el, cfg);
   }
   draw("c_rm", "R_M", "#B4642D");
   draw("c_ra", "R_A", "#2456A6");

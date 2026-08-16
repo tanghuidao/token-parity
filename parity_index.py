@@ -71,15 +71,25 @@ DEFAULT_CONFIG = {
     # j_per_token   该模型输出 token 的全栈能耗估计（焦耳/输出 token，含数据中心 PUE）
     #               来源：Epoch AI、厂商披露、学术测量。粗模型的量级在 0.5–5 J/token。
     # quality_ref   是否作为质量基准模型（恰好一个为 true）
+    # quality_score 该模型的外部基准综合分（如 Artificial Analysis Intelligence Index），
+    #               必须来自价格以外的独立评测源。全部模型都有分数时 Ω 才会计算。
+    #               由项目所有者手动季度更新。初始填 None 表示尚未提供。
     "inference_basket": [
         {"id": "anthropic/claude-sonnet-5",       "weight": 0.30, "j_per_token": 3.0,
-         "quality_ref": True},
-        {"id": "openai/gpt-5.5",                  "weight": 0.25, "j_per_token": 3.0},
-        {"id": "google/gemini-3.7-flash",         "weight": 0.25, "j_per_token": 1.0},
-        {"id": "deepseek/deepseek-v4-pro",        "weight": 0.20, "j_per_token": 1.5},
+         "quality_ref": True, "quality_score": None},
+        {"id": "openai/gpt-5.5",                  "weight": 0.25, "j_per_token": 3.0,
+         "quality_score": None},
+        {"id": "google/gemini-3.7-flash",         "weight": 0.25, "j_per_token": 1.0,
+         "quality_score": None},
+        {"id": "deepseek/deepseek-v4-pro",        "weight": 0.20, "j_per_token": 1.5,
+         "quality_score": None},
     ],
     # 篮子里某个模型在 OpenRouter 下架时的策略："skip"（剔除并重新归一化）或 "fail"
     "missing_model_policy": "skip",
+
+    # 篮子版本号：每次修改篮子构成/权重/j_per_token 时由项目所有者手动递增
+    # 为 v2、v3…。用于 Λ 的链式接续（见 chain_factor_for / README"如何更换篮子"）。
+    "basket_version": "v1",
 
     # ---------------- 输出 ----------------
     "csv_path": "parity_series.csv",
@@ -188,10 +198,36 @@ class Snapshot:
     R_M: float                           # 美元/kWh
     R_A: float                           # 美元/kWh
     Lambda: float                        # R_A / R_M
-    rho_parity_tok_per_btc: float        # 焦耳平价汇率
+    rho_parity_tok_per_btc: float        # 焦耳平价汇率（无 quality_score 时为 None）
     rho_market_tok_per_btc: float        # 市场隐含汇率
-    Omega: float                         # ln(rho_parity / rho_market)
+    Omega: float                         # ln(rho_parity / rho_market)（无 quality_score 时为 None）
     source: str
+    basket_version: str = "v1"           # 篮子版本号，用于 Λ 链式接续
+    Lambda_chained: float = 0.0          # Λ × 链式系数，网页与分析用此列
+
+
+def chain_factor_for(version, path="chain_factors.json"):
+    """读取 Λ 链式接续系数。
+
+    仓库根目录维护 chain_factors.json，结构 {"v1": 1.0, "v2": <系数>, ...}。
+    换篮子时由项目所有者手动写入新版本系数，定义：
+        系数 = 换篮当天 旧篮 Λ_chained ÷ 新篮 Λ_raw
+    （详见 README "如何更换篮子"小节。）
+
+    文件缺失、JSON 损坏或版本未登记时返回 1.0（首版 v1 即为 1.0），
+    并打印 ::warning:: 提示，便于在 Actions 日志中发现。
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            factors = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return 1.0
+    if version not in factors:
+        print(f"::warning::chain_factors.json 中未登记 basket_version={version}，暂用系数 1.0")
+    try:
+        return float(factors.get(version, 1.0))
+    except (TypeError, ValueError):
+        return 1.0
 
 
 def compute(raw: RawData, cfg: dict) -> Snapshot:
@@ -230,20 +266,31 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
     for b in priced:
         b["weight_norm"] = b["weight"] / wsum
 
-    # 质量折算（升贴水法）：以基准模型价格为 1，其他模型的质量权重 = 其价格/基准价。
-    # 一个"标准token当量"= 原始token × 质量权重。于是：
-    #   标准token的单价 对所有模型都等于基准价（构造使然），
-    #   但每个模型"每焦耳产出的标准token数"不同——质量调整落在数量侧，不在价格侧。
+    # ── 质量折算（升贴水法）─────────────────────────────────────────
+    # 弃用说明：旧版用"价格÷基准价"作 quality_weight，代入 ρ_parity/ρ_market
+    # 后价格项完全相消，导致 Ω ≡ ln(Λ) 恒成立，Ω 不携带独立信息。
+    # 现改用来自价格以外的独立评测分（quality_score）作质量权重。
     ref = next((b for b in priced if b.get("quality_ref")), priced[0])
     ref_price = ref["usd_per_token"]
+
+    # 只有当篮子中所有入选模型都提供了 quality_score 时才计算质量权重；
+    # 否则一律置 1，且 Ω、ρ_parity 输出空值（待质量基准数据上线）。
+    has_scores = all(b.get("quality_score") is not None for b in priced)
+    if has_scores:
+        ref_score = float(ref["quality_score"])
+        for b in priced:
+            b["quality_weight"] = float(b["quality_score"]) / ref_score
+    else:
+        for b in priced:
+            b["quality_weight"] = 1.0
+
     for b in priced:
-        b["quality_weight"] = b["usd_per_token"] / ref_price
         # 每焦耳标准token产出 = 质量权重 / 单token能耗
         b["std_tok_per_j"] = b["quality_weight"] / b["j_per_token"]
         # 该模型每千瓦时毛收入（美元/kWh）= 单价(美元/tok) × 产量(tok/kWh)
         b["usd_per_kwh"] = b["usd_per_token"] * (J_PER_KWH / b["j_per_token"])
 
-    # 篮子 R_A：按用量权重加权的每千瓦时收入
+    # 篮子 R_A：按用量权重加权的每千瓦时收入（与 quality_weight 无关，恒可算）
     R_A = sum(b["weight_norm"] * b["usd_per_kwh"] for b in priced)
     basket_price_mtok = sum(b["weight_norm"] * b["usd_per_token"] for b in priced) * 1e6
     basket_j_per_tok = sum(b["weight_norm"] * b["j_per_token"] for b in priced)
@@ -252,11 +299,20 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
 
     # ---------- 跨市场汇率 ----------
     Lambda = R_A / R_M
-    # 焦耳平价汇率：一枚BTC的体现能全部用于推理，可产出多少"标准token"
-    rho_parity = epsilon_btc * basket_std_tok_per_j
-    # 市场隐含汇率：币价 / 标准token市价（= 基准模型单价）
+    # 市场隐含汇率：币价 / 标准token市价（= 基准模型单价）——与质量分无关，始终可算
     rho_market = raw.btc_price_usd / ref_price
-    Omega = math.log(rho_parity / rho_market)
+    if has_scores:
+        # 焦耳平价汇率：一枚BTC的体现能全部用于推理，可产出多少"标准token"
+        rho_parity = epsilon_btc * basket_std_tok_per_j
+        Omega = math.log(rho_parity / rho_market)
+    else:
+        # 缺少 quality_score：Ω、ρ_parity 暂不可计算（输出空值）
+        rho_parity = None
+        Omega = None
+
+    # Λ 链式接续：把不同篮子版本的 Λ 折算到统一基期，使序列衡量"变动"而非"篮子水平"
+    version = cfg.get("basket_version", "v1")
+    Lambda_chained = Lambda * chain_factor_for(version)
 
     detail = [{k: b[k] for k in
                ("id", "weight_norm", "usd_per_token", "j_per_token",
@@ -277,6 +333,8 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
         rho_market_tok_per_btc=rho_market,
         Omega=Omega,
         source=raw.source,
+        basket_version=version,
+        Lambda_chained=Lambda_chained,
     )
 
 
@@ -287,7 +345,8 @@ CSV_FIELDS = ["date", "btc_price_usd", "hashprice_usd_per_ph_day",
               "fleet_efficiency_j_per_th", "epsilon_btc_gwh",
               "basket_price_usd_per_mtok", "basket_j_per_token",
               "R_M", "R_A", "Lambda", "Omega",
-              "rho_parity_tok_per_btc", "rho_market_tok_per_btc", "source"]
+              "rho_parity_tok_per_btc", "rho_market_tok_per_btc", "source",
+              "basket_version", "Lambda_chained"]
 
 
 def append_csv(snap: Snapshot, path: str):
@@ -307,10 +366,13 @@ def append_csv(snap: Snapshot, path: str):
         "R_M": f"{snap.R_M:.6f}",
         "R_A": f"{snap.R_A:.4f}",
         "Lambda": f"{snap.Lambda:.2f}",
-        "Omega": f"{snap.Omega:.4f}",
-        "rho_parity_tok_per_btc": f"{snap.rho_parity_tok_per_btc:.4e}",
+        "Omega": "" if snap.Omega is None else f"{snap.Omega:.4f}",
+        "rho_parity_tok_per_btc": "" if snap.rho_parity_tok_per_btc is None
+                                   else f"{snap.rho_parity_tok_per_btc:.4e}",
         "rho_market_tok_per_btc": f"{snap.rho_market_tok_per_btc:.4e}",
         "source": snap.source,
+        "basket_version": snap.basket_version,
+        "Lambda_chained": f"{snap.Lambda_chained:.2f}",
     })
     rows.sort(key=lambda r: r["date"])
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -340,10 +402,16 @@ def print_report(snap: Snapshot):
     print("【四条指数】")
     print(f"  R_M   挖矿每度电毛收入   {snap.R_M:>12.4f}  美元/kWh")
     print(f"  R_A   推理每度电毛收入   {snap.R_A:>12.2f}  美元/kWh")
-    print(f"  Λ     能量套利比        {snap.Lambda:>12.1f}  （毛收入口径，非利润）")
-    print(f"  ρ*    焦耳平价汇率      {snap.rho_parity_tok_per_btc:>12.3e}  标准token/BTC")
+    print(f"  Λ     能量套利比        {snap.Lambda:>12.1f}  （毛收入口径，非利润；链式 {snap.basket_version} 系数×Λ={snap.Lambda_chained:.1f}）")
+    if snap.rho_parity_tok_per_btc is None:
+        print("  ρ*    焦耳平价汇率        (待质量基准数据上线)")
+    else:
+        print(f"  ρ*    焦耳平价汇率      {snap.rho_parity_tok_per_btc:>12.3e}  标准token/BTC")
     print(f"  ρ     市场隐含汇率      {snap.rho_market_tok_per_btc:>12.3e}  标准token/BTC")
-    print(f"  Ω     平价偏离指数      {snap.Omega:>12.3f}  = ln(ρ*/ρ)")
+    if snap.Omega is None:
+        print("  Ω     平价偏离指数        (待质量基准数据上线)")
+    else:
+        print(f"  Ω     平价偏离指数      {snap.Omega:>12.3f}  = ln(ρ*/ρ)")
     print(line)
 
 
@@ -371,17 +439,31 @@ def plot_series(csv_path: str, png_path: str):
         print("序列为空，跳过绘图")
         return
     dates = [r["date"] for r in rows]
-    series = {k: [float(r[k]) for r in rows] for k in ("R_M", "R_A", "Lambda", "Omega")}
+    # Omega / rho_parity 可能为空（缺少 quality_score 时），用 None 容错形成断点
+    def _f(v):
+        try:
+            return float(v)
+        except (ValueError, TypeError):
+            return None
+    series = {k: [_f(r.get(k, "")) for r in rows]
+              for k in ("R_M", "R_A", "Lambda", "Omega")}
 
     labels = {
         "R_M": ("挖矿每度电毛收入 R_M ($/kWh)" if zh else "Mining revenue R_M ($/kWh)"),
         "R_A": ("推理每度电毛收入 R_A ($/kWh)" if zh else "Inference revenue R_A ($/kWh)"),
-        "Lambda": ("能量套利比 Λ" if zh else "Energy arbitrage ratio Λ"),
+        "Lambda": ("能量套利比 Λ（链式接续）" if zh else "Energy arbitrage ratio Λ (chain-linked)"),
         "Omega": ("平价偏离指数 Ω" if zh else "Parity deviation Ω"),
     }
     fig, axes = plt.subplots(4, 1, figsize=(10, 12), sharex=True)
     for ax, key in zip(axes, ("R_M", "R_A", "Lambda", "Omega")):
-        ax.plot(dates, series[key], marker="o", linewidth=1.5)
+        vals = series[key]
+        # 全空（如 Ω 待质量基准）则只画标题不画线，避免空图报错
+        if any(v is not None for v in vals):
+            ax.plot(dates, vals, marker="o", linewidth=1.5)
+        else:
+            ax.text(0.5, 0.5, "待质量基准数据" if zh else "Pending quality benchmark",
+                    ha="center", va="center", transform=ax.transAxes,
+                    color="#999", fontsize=11)
         ax.set_title(labels[key], fontsize=11)
         ax.grid(alpha=0.3)
     axes[-1].set_xlabel("date")
@@ -394,6 +476,48 @@ def plot_series(csv_path: str, png_path: str):
 
 
 # --------------------------------------------------------------------------
+def sanity_check(snap: Snapshot, csv_path: str):
+    """数值哨兵：越界只打印 ::warning::（GitHub Actions 会高亮成黄色），
+    绝不抛错、绝不中断任务。返回 (warnings, skip_write)。
+
+    skip_write=True 表示日期与 CSV 末行重复，应跳过本次写入。
+    """
+    warns = []
+    skip_write = False
+
+    if not (0.005 <= snap.R_M <= 0.5):
+        warns.append(f"R_M={snap.R_M:.4f} 超出合理区间 [0.005, 0.5] $/kWh")
+    if not (0.5 <= snap.R_A <= 200):
+        warns.append(f"R_A={snap.R_A:.2f} 超出合理区间 [0.5, 200] $/kWh")
+
+    # 读取 CSV 末行，用于日期去重与 Λ 变动检查
+    last_date, last_lambda = None, None
+    if os.path.exists(csv_path):
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        if rows:
+            last_date = rows[-1].get("date")
+            lam_str = rows[-1].get("Lambda")
+            if lam_str:
+                try:
+                    last_lambda = float(lam_str)
+                except ValueError:
+                    last_lambda = None
+
+    if last_date == snap.date:
+        warns.append(f"日期 {snap.date} 与 CSV 末行重复，跳过写入")
+        skip_write = True
+    if last_lambda and last_lambda > 0:
+        change = abs(snap.Lambda - last_lambda) / last_lambda
+        if change > 0.5:
+            warns.append(f"Λ={snap.Lambda:.1f} 相对上一行 {last_lambda:.1f} "
+                         f"变动 {change*100:.0f}%，超 ±50%")
+
+    for w in warns:
+        print(f"::warning::{w}")
+    return warns, skip_write
+
+
 def main():
     ap = argparse.ArgumentParser(description="Token 能量平价指数")
     ap.add_argument("--offline", action="store_true",
@@ -403,6 +527,8 @@ def main():
     ap.add_argument("--config", default=None, help="自定义配置 JSON（覆盖默认值）")
     ap.add_argument("--plot", action="store_true", help="计算后绘制历史序列")
     ap.add_argument("--no-csv", action="store_true", help="只打印，不写入 CSV")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="只计算打印不写 CSV（换篮子时新旧对比用）")
     args = ap.parse_args()
 
     cfg = dict(DEFAULT_CONFIG)
@@ -414,9 +540,14 @@ def main():
     snap = compute(raw, cfg)
     print_report(snap)
 
-    if not args.no_csv:
+    # 数值哨兵：在写 CSV 前运行（--dry-run 也运行，仅作告警提示）
+    _, skip_write = sanity_check(snap, cfg["csv_path"])
+
+    if not args.no_csv and not args.dry_run and not skip_write:
         append_csv(snap, cfg["csv_path"])
         print(f"已写入序列：{cfg['csv_path']}")
+    elif skip_write:
+        print(f"因日期重复，未写入 {cfg['csv_path']}")
     if args.plot:
         plot_series(cfg["csv_path"], cfg["plot_path"])
 
