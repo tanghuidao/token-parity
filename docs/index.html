@@ -96,7 +96,7 @@ footer a { color: var(--faint); }
   <div class="eyebrow">Abundantics · 丰裕学 / 实证模块 01</div>
   <h1>Token 能量平价指数</h1>
   <p class="sub">同一焦耳，两种耗散：AI 推理 token 与 PoW 加密货币折算到同一物理公分母（每千瓦时收入）后的日频指数族。</p>
-  <div class="stamp">最近更新 2026-08-16 · 数据源 CoinGecko / mempool.space / OpenRouter · 自动更新</div>
+  <div class="stamp">最近更新 2026-08-17 · 数据源 CoinGecko / mempool.space / OpenRouter · 自动更新</div>
 </header>
 
 <div class="kwh">
@@ -107,29 +107,29 @@ footer a { color: var(--faint); }
     <div class="tick" style="left:33.3%"><span>$0.10</span></div>
     <div class="tick" style="left:66.7%"><span>$1</span></div>
     <div class="tick" style="left:98.0%"><span>$10</span></div>
-    <div class="pin mine" style="left:27.3%"><b>挖矿 $0.066</b></div>
-    <div class="pin infer" style="left:98.0%"><b>推理 $15.41</b></div>
+    <div class="pin mine" style="left:27.2%"><b>挖矿 $0.066</b></div>
+    <div class="pin infer" style="left:98.0%"><b>推理 $14.71</b></div>
   </div>
-  <div class="verdict">当前能量套利比 <strong>Λ = 233.9</strong>：一度电喂给推理的毛收入是喂给挖矿的 234 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
+  <div class="verdict">当前能量套利比 <strong>Λ = 224.1</strong>：一度电喂给推理的毛收入是喂给挖矿的 224 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
 </div>
 
 <div class="cards">
   <div class="card"><div class="k">R_M · 挖矿每度电毛收入</div>
-    <div class="v copper">$0.0659</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
+    <div class="v copper">$0.0656</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
   <div class="card"><div class="k">R_A · 推理每度电毛收入</div>
-    <div class="v cobalt">$15.41</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
+    <div class="v cobalt">$14.71</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
   <div class="card"><div class="k">Λ · 能量套利比</div>
-    <div class="v graphite">233.9</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
+    <div class="v graphite">224.1</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
   <div class="card"><div class="k">Ω · 平价偏离指数</div>
-    <div class="v oxblood">待质量基准数据上线</div><div class="d">Pending quality benchmark · 待外部评测分（quality_score）上线后自动恢复</div></div>
+    <div class="v oxblood">5.742</div><div class="d">ln(焦耳平价汇率 / 市场隐含汇率)，防御性 vs 生产性耗散的定价缺口</div></div>
 </div>
 
 <section class="charts">
   <div class="chart-grid" id="jscharts">
-    <div class="chartbox"><h3 style="color:var(--copper)">R_M（$/kWh）</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--copper)">0.0659</span></div></div>
-    <div class="chartbox"><h3 style="color:var(--cobalt)">R_A（$/kWh）</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--cobalt)">15.41</span></div></div>
-    <div class="chartbox"><h3 style="color:var(--graphite)">Λ 能量套利比</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--graphite)">233.9</span></div></div>
-    
+    <div class="chartbox"><h3 style="color:var(--copper)">R_M（$/kWh）</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--copper)">0.0656</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--cobalt)">R_A（$/kWh）</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--cobalt)">14.71</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--graphite)">Λ 能量套利比</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--graphite)">224.1</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--oxblood)">Ω 平价偏离指数</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--oxblood)">5.742</span></div></div>
   </div>
   <noscript><div class="fallback"><img src="parity_index.png" alt="指数历史曲线"></div></noscript>
   <div class="fallback" id="pngfallback" style="display:none"><img src="parity_index.png" alt="指数历史曲线"></div>
@@ -155,7 +155,7 @@ footer a { color: var(--faint); }
 </footer>
 </div>
 
-<script>window.__PARITY__ = {"dates": ["2026-08-16"], "series": {"R_M": [0.06587], "R_A": [15.4088], "Lambda": [233.93], "Omega": [null]}};</script>
+<script>window.__PARITY__ = {"dates": ["2026-08-16", "2026-08-17"], "series": {"R_M": [0.06587, 0.065614], "R_A": [15.4088, 14.7051], "Lambda": [233.93, 224.12], "Omega": [null, 5.7416]}};</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
         onerror="document.getElementById('jscharts').style.display='none';document.getElementById('pngfallback').style.display='block';"></script>
 <script>
