@@ -31,6 +31,7 @@ jobs:
         run: |
           git config user.name "parity-bot"
           git config user.email "parity-bot@users.noreply.github.com"
-          git add parity_series.csv parity_index.png docs/
+          git add parity_series.csv basket_detail.csv parity_index.png docs/
+          if [ -d raw ]; then git add raw/; fi
           git commit -m "daily update $(date -u +%F)" || echo "no changes to commit"
           git push

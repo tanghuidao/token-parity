@@ -258,13 +258,16 @@ footer a {{ color: var(--faint); }}
     <li>全网加权能效与单 token 能耗为手动参数（参考 CBECI / Epoch AI），是主要误差源；</li>
     <li>Λ 为毛收入口径，非利润口径——推理侧成本大头是 GPU 折旧而非电费；</li>
     <li>篮子成分变更采用链式接续（chain-linking），系数记录于仓库根目录 <code>chain_factors.json</code>，换基日期记录于提交历史。</li>
+    <li><b>可复现性</b>：主序列中 <code>basket_price</code> 与 <code>basket_j_per_token</code> 为描述性均值，仅供概览；R_A 的精确复现请用 <a href="basket_detail.csv">每日各模型明细</a>（R_A = Σ contrib_R_A，逐行可验）。</li>
+    <li><b>数据源治理</b>：推理价格主源为 OpenRouter（2026-08 已被 Stripe 收购）。为对冲单一商业主体的口径风险，另设厂商牌价第二源作每日交叉验证（明细中 <code>usd_per_mtok_alt</code> 列），并逐日归档各数据源原始响应于仓库 <code>raw/</code> 目录。</li>
   </ul>
 </details>
 
 <footer>
   丰裕学（Abundantics）研究项目 · 指数定义与代码开源，非投资建议 ·
-  <a href="parity_series.csv">下载完整序列 CSV</a>
-  <div style="margin-top:6px">TEPI — Token Energy Parity Index. Daily revenue per kWh of Bitcoin mining (R_M) vs AI inference (R_A). Open data &amp; code · <a href="parity_series.csv">Download CSV</a></div>
+  <a href="parity_series.csv">下载完整序列 CSV</a> ·
+  <a href="basket_detail.csv">每日模型明细 CSV</a>
+  <div style="margin-top:6px">TEPI — Token Energy Parity Index. Daily revenue per kWh of Bitcoin mining (R_M) vs AI inference (R_A). Open data &amp; code · <a href="parity_series.csv">Download CSV</a> · <a href="basket_detail.csv">Basket detail</a></div>
 </footer>
 </div>
 
@@ -310,8 +313,8 @@ footer a {{ color: var(--faint); }}
     os.makedirs(OUT_DIR, exist_ok=True)
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
-    # 供无 JS / 无 CDN 环境回退显示的曲线图，以及可下载的原始序列
-    for src in ("parity_index.png", "parity_series.csv"):
+    # 供无 JS / 无 CDN 环境回退显示的曲线图，以及可下载的原始序列与明细
+    for src in ("parity_index.png", "parity_series.csv", "basket_detail.csv"):
         if os.path.exists(src):
             shutil.copy(src, os.path.join(OUT_DIR, src))
     print(f"已生成 {OUT_DIR}/index.html（{len(rows)} 个数据点，最近 {rows[-1]['date']}）")
