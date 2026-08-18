@@ -96,7 +96,7 @@ footer a { color: var(--faint); }
   <div class="eyebrow">Abundantics · 丰裕学 / 实证模块 01</div>
   <h1>Token 能量平价指数</h1>
   <p class="sub">同一焦耳，两种耗散：AI 推理 token 与 PoW 加密货币折算到同一物理公分母（每千瓦时收入）后的日频指数族。</p>
-  <div class="stamp">最近更新 2026-08-17 · 数据源 CoinGecko / mempool.space / OpenRouter · 自动更新</div>
+  <div class="stamp">最近更新 2026-08-18 · 数据源 CoinGecko / mempool.space / OpenRouter · 自动更新</div>
 </header>
 
 <div class="kwh">
@@ -107,29 +107,29 @@ footer a { color: var(--faint); }
     <div class="tick" style="left:33.3%"><span>$0.10</span></div>
     <div class="tick" style="left:66.7%"><span>$1</span></div>
     <div class="tick" style="left:98.0%"><span>$10</span></div>
-    <div class="pin mine" style="left:27.2%"><b>挖矿 $0.066</b></div>
-    <div class="pin infer" style="left:98.0%"><b>推理 $14.71</b></div>
+    <div class="pin mine" style="left:27.1%"><b>挖矿 $0.065</b></div>
+    <div class="pin infer" style="left:98.0%"><b>推理 $16.19</b></div>
   </div>
-  <div class="verdict">当前能量套利比 <strong>Λ = 224.1</strong>：一度电喂给推理的毛收入是喂给挖矿的 224 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
+  <div class="verdict">当前能量套利比 <strong>Λ = 249.3</strong>：一度电喂给推理的毛收入是喂给挖矿的 249 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
 </div>
 
 <div class="cards">
   <div class="card"><div class="k">R_M · 挖矿每度电毛收入</div>
-    <div class="v copper">$0.0656</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
+    <div class="v copper">$0.0649</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
   <div class="card"><div class="k">R_A · 推理每度电毛收入</div>
-    <div class="v cobalt">$14.71</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
+    <div class="v cobalt">$16.19</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
   <div class="card"><div class="k">Λ · 能量套利比</div>
-    <div class="v graphite">224.1</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
+    <div class="v graphite">249.3</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
   <div class="card"><div class="k">Ω · 平价偏离指数</div>
-    <div class="v oxblood">5.742</div><div class="d">ln(焦耳平价汇率 / 市场隐含汇率)，防御性 vs 生产性耗散的定价缺口</div></div>
+    <div class="v oxblood">5.752</div><div class="d">ln(焦耳平价汇率 / 市场隐含汇率)，防御性 vs 生产性耗散的定价缺口</div></div>
 </div>
 
 <section class="charts">
   <div class="chart-grid" id="jscharts">
-    <div class="chartbox"><h3 style="color:var(--copper)">R_M（$/kWh）</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--copper)">0.0656</span></div></div>
-    <div class="chartbox"><h3 style="color:var(--cobalt)">R_A（$/kWh）</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--cobalt)">14.71</span></div></div>
-    <div class="chartbox"><h3 style="color:var(--graphite)">Λ 能量套利比</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--graphite)">224.1</span></div></div>
-    <div class="chartbox"><h3 style="color:var(--oxblood)">Ω 平价偏离指数</h3><div class="collecting">序列积累中（当前 1 天）· Collecting data (day 1）<br><span class="bigval" style="color:var(--oxblood)">5.742</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--copper)">R_M（$/kWh）</h3><div class="collecting">序列积累中（当前 3 天）· Collecting data (day 3）<br><span class="bigval" style="color:var(--copper)">0.0649</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--cobalt)">R_A（$/kWh）</h3><div class="collecting">序列积累中（当前 3 天）· Collecting data (day 3）<br><span class="bigval" style="color:var(--cobalt)">16.19</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--graphite)">Λ 能量套利比</h3><div class="collecting">序列积累中（当前 3 天）· Collecting data (day 3）<br><span class="bigval" style="color:var(--graphite)">249.3</span></div></div>
+    <div class="chartbox"><h3 style="color:var(--oxblood)">Ω 平价偏离指数</h3><div class="collecting">序列积累中（当前 2 天）· Collecting data (day 2）<br><span class="bigval" style="color:var(--oxblood)">5.752</span></div></div>
   </div>
   <noscript><div class="fallback"><img src="parity_index.png" alt="指数历史曲线"></div></noscript>
   <div class="fallback" id="pngfallback" style="display:none"><img src="parity_index.png" alt="指数历史曲线"></div>
@@ -145,17 +145,20 @@ footer a { color: var(--faint); }
     <li>全网加权能效与单 token 能耗为手动参数（参考 CBECI / Epoch AI），是主要误差源；</li>
     <li>Λ 为毛收入口径，非利润口径——推理侧成本大头是 GPU 折旧而非电费；</li>
     <li>篮子成分变更采用链式接续（chain-linking），系数记录于仓库根目录 <code>chain_factors.json</code>，换基日期记录于提交历史。</li>
+    <li><b>可复现性</b>：主序列中 <code>basket_price</code> 与 <code>basket_j_per_token</code> 为描述性均值，仅供概览；R_A 的精确复现请用 <a href="basket_detail.csv">每日各模型明细</a>（R_A = Σ contrib_R_A，逐行可验）。</li>
+    <li><b>数据源治理</b>：推理价格主源为 OpenRouter（2026-08 已被 Stripe 收购）。为对冲单一商业主体的口径风险，另设厂商牌价第二源作每日交叉验证（明细中 <code>usd_per_mtok_alt</code> 列），并逐日归档各数据源原始响应于仓库 <code>raw/</code> 目录。</li>
   </ul>
 </details>
 
 <footer>
   丰裕学（Abundantics）研究项目 · 指数定义与代码开源，非投资建议 ·
-  <a href="parity_series.csv">下载完整序列 CSV</a>
-  <div style="margin-top:6px">TEPI — Token Energy Parity Index. Daily revenue per kWh of Bitcoin mining (R_M) vs AI inference (R_A). Open data &amp; code · <a href="parity_series.csv">Download CSV</a></div>
+  <a href="parity_series.csv">下载完整序列 CSV</a> ·
+  <a href="basket_detail.csv">每日模型明细 CSV</a>
+  <div style="margin-top:6px">TEPI — Token Energy Parity Index. Daily revenue per kWh of Bitcoin mining (R_M) vs AI inference (R_A). Open data &amp; code · <a href="parity_series.csv">Download CSV</a> · <a href="basket_detail.csv">Basket detail</a></div>
 </footer>
 </div>
 
-<script>window.__PARITY__ = {"dates": ["2026-08-16", "2026-08-17"], "series": {"R_M": [0.06587, 0.065614], "R_A": [15.4088, 14.7051], "Lambda": [233.93, 224.12], "Omega": [null, 5.7416]}};</script>
+<script>window.__PARITY__ = {"dates": ["2026-08-16", "2026-08-17", "2026-08-18"], "series": {"R_M": [0.06587, 0.065614, 0.064936], "R_A": [15.4088, 14.7051, 16.1883], "Lambda": [233.93, 224.12, 249.3], "Omega": [null, 5.7416, 5.752]}};</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
         onerror="document.getElementById('jscharts').style.display='none';document.getElementById('pngfallback').style.display='block';"></script>
 <script>

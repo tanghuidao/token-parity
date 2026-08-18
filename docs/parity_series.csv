@@ -1,3 +1,4 @@
-date,btc_price_usd,hashprice_usd_per_ph_day,fleet_efficiency_j_per_th,epsilon_btc_gwh,basket_price_usd_per_mtok,basket_j_per_token,R_M,R_A,Lambda,Omega,rho_parity_tok_per_btc,rho_market_tok_per_btc,source,basket_version,Lambda_chained
-2026-08-16,63006.00,31.6177,20.0,0.9565,11.4360,2.200,0.065870,15.4088,233.93,,,6.3006e+09,live,v1,233.93
-2026-08-17,63167.00,31.4946,20.0,0.9627,11.1428,2.200,0.065614,14.7051,224.12,5.7416,1.9681e+12,6.3167e+09,live,v1,224.12
+date,btc_price_usd,hashprice_usd_per_ph_day,fleet_efficiency_j_per_th,epsilon_btc_gwh,basket_price_usd_per_mtok,basket_j_per_token,basket_price_alt_usd_per_mtok,alt_coverage,R_M,R_A,Lambda,Omega,rho_parity_tok_per_btc,rho_market_tok_per_btc,source,basket_version,Lambda_chained
+2026-08-16,63006.00,31.6177,20.0,0.9565,11.4360,2.200,,,0.065870,15.4088,233.93,,,6.3006e+09,live,v1,233.93
+2026-08-17,63167.00,31.4946,20.0,0.9627,11.1428,2.200,,,0.065614,14.7051,224.12,5.7416,1.9681e+12,6.3167e+09,live,v1,224.12
+2026-08-18,64233.00,31.1692,20.0,0.9892,11.7608,2.200,11.6115,4/4,0.064936,16.1883,249.30,5.7520,2.0222e+12,6.4233e+09,live,v1,249.30
