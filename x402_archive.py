@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-x402 生态付费端点每日归档（x402-archive v1.0）
+x402 生态付费端点每日归档（x402-archive v1.1）
 ================================================
 
 只归档，不计算，不进任何指数、不上任何网页。
 本模块是独立旁路：不改 parity_index.py / build_site.py / daily.yml 的任何一行。
+
+v1.1 变更（2026-08-21，见 v1.1 交付简报）：
+  - 归档改为 gzip 压缩存储 raw_x402/YYYY-MM-DD.json.gz（标准库 gzip，默认压缩等级；
+    内容仍为紧凑 JSON + ensure_ascii=False，仅外层压缩）。
+  - 已有的 raw_x402/2026-08-21.json 已原地替换为同名 .json.gz（同一提交完成）。
+  - 体量哨兵阈值：压缩后单文件 >1MB 时打印 ::warning:: 并继续写入（只叫不咬）。
 
 数据源（2026-08-21 实测，均免 key、免登录；任务书 v1.0 决策记录见交付简报）：
   主源 Agentic.Market（Coinbase x402 服务目录，2026-04 上线）:
@@ -25,9 +31,9 @@ x402 生态付费端点每日归档（x402-archive v1.0）
     端点只保留 url/method/挂牌价与计价单位（amount+scheme，非空时才带 max/min；
     币种 100% 为 USDC，统一上提为顶层 settlement_assets）。
   - 剔除 description、iconUrl、parameters、quality 等大字段。
-  - 单文件 >2MB 时打印 WARNING 并继续写入（只叫不咬）。
-  - 当日重复运行覆盖当日文件；抓取失败时写入 fetch_status: failed 的最小文件，
-    绝不复制昨日数据冒充当日。
+  - 压缩后单文件 >1MB 时打印 ::warning:: 并继续写入（只叫不咬）。
+  - 当日重复运行覆盖当日 .json.gz；抓取失败时写入 fetch_status: failed 的
+    最小 .json.gz，绝不复制昨日数据冒充当日。
 
 用法：
   python x402_archive.py                # 归档今天
@@ -35,6 +41,7 @@ x402 生态付费端点每日归档（x402-archive v1.0）
 """
 
 import argparse
+import gzip
 import json
 import os
 import sys
@@ -53,7 +60,7 @@ CDP_URL = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources"
 CDP_PROBE_LIMIT = 20             # 探针仅取一页，验证可达性
 ARCHIVE_DIR = "raw_x402"
 TIMEOUT = 30
-UA = "x402-archive/1.0 (daily archive; no key; see github.com/tanghuidao/token-parity)"
+UA = "x402-archive/1.1 (daily archive; no key; see github.com/tanghuidao/token-parity)"
 
 # 交付简报用的 reasoning 类关键词（分类边界会变，仅用于统计，不写入归档）
 REASONING_KEYWORDS = (
@@ -175,13 +182,15 @@ def pricing_unit_distribution(services: list) -> dict:
 
 
 def write_archive(doc: dict, day: str) -> str:
+    """写 gzip 压缩归档 raw_x402/YYYY-MM-DD.json.gz（紧凑 JSON + ensure_ascii=False）。
+    压缩后 >1MB 时打印 ::warning::（GitHub Actions 注解格式）并继续写入，只叫不咬。"""
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
-    path = os.path.join(ARCHIVE_DIR, f"{day}.json")
-    with open(path, "w", encoding="utf-8") as f:
+    path = os.path.join(ARCHIVE_DIR, f"{day}.json.gz")
+    with gzip.open(path, "wt", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
     size = os.path.getsize(path)
-    if size > 2 * 1024 * 1024:
-        print(f"WARNING: {path} size {size} bytes exceeds 2MB (written anyway)")
+    if size > 1024 * 1024:
+        print(f"::warning:: {path} size {size} bytes exceeds 1MB (written anyway)")
     return path
 
 
