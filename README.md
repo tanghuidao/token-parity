@@ -2,7 +2,7 @@
 
 把 AI 推理 token 和 PoW 加密货币折算到同一个物理公分母（每千瓦时收入），构造日频指数族，作为"焦耳平价"框架的实证核心与活体演示。
 
-**官方站点：https://abundantics.org** （指数大屏、方法论、数据下载；本仓库的 GitHub Pages 页面继续作为数据页保留）
+**官方站点 / Official site: https://abundantics.org** （指数大屏、方法论、数据下载；本仓库的 GitHub Pages 页面继续作为数据页保留）
 
 方法论文档：TEPI Index Methodology v0.1（中英双语，见官方站点方法论页）。本指数隶属丰裕学（Abundantics）研究纲领，预印本合订本 v1.6 已存缴 Zenodo：DOI [10.5281/zenodo.21989658](https://doi.org/10.5281/zenodo.21989658)。
 
