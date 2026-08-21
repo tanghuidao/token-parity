@@ -1,0 +1,35 @@
+name: x402-daily-archive
+
+on:
+  schedule:
+    - cron: "20 0 * * *"   # UTC 00:20 = 北京时间 08:20，错开主管线 daily-parity-index 的 00:10
+  workflow_dispatch:        # 允许在 Actions 页面手动触发（首次部署时用）
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch x402 directory and write archive
+        # 失败不重试、不中断：脚本已把 fetch_status=failed 的最小文件写入 raw_x402/，
+        # 失败原因在日志可见；连续失败的监测靠人工翻日志（本模块是零成本旁路）。
+        run: python x402_archive.py || true
+
+      - name: Commit and push
+        run: |
+          git config user.name "parity-bot"
+          git config user.email "parity-bot@users.noreply.github.com"
+          git add raw_x402/
+          git commit -m "x402 archive $(date -u +%F)" || echo "no changes to commit"
+          git push
