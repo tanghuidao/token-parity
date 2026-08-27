@@ -96,7 +96,7 @@ footer a { color: var(--faint); }
   <div class="eyebrow">Abundantics · 丰裕学 / 实证模块 01</div>
   <h1>Token 能量平价指数</h1>
   <p class="sub">同一焦耳，两种耗散：AI 推理 token 与 PoW 加密货币折算到同一物理公分母（每千瓦时收入）后的日频指数族。</p>
-  <div class="stamp">最近更新 2026-08-26 · 数据源 CoinGecko / mempool.space / OpenRouter · 自动更新</div>
+  <div class="stamp">最近更新 2026-08-27 · 数据源 CoinGecko / mempool.space / OpenRouter · 自动更新</div>
 </header>
 
 <div class="kwh">
@@ -107,21 +107,21 @@ footer a { color: var(--faint); }
     <div class="tick" style="left:33.3%"><span>$0.10</span></div>
     <div class="tick" style="left:66.7%"><span>$1</span></div>
     <div class="tick" style="left:98.0%"><span>$10</span></div>
-    <div class="pin mine" style="left:31.3%"><b>挖矿 $0.087</b></div>
-    <div class="pin infer" style="left:98.0%"><b>推理 $15.05</b></div>
+    <div class="pin mine" style="left:31.1%"><b>挖矿 $0.085</b></div>
+    <div class="pin infer" style="left:98.0%"><b>推理 $15.12</b></div>
   </div>
-  <div class="verdict">当前能量套利比 <strong>Λ = 173.6</strong>：一度电喂给推理的毛收入是喂给挖矿的 174 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
+  <div class="verdict">当前能量套利比 <strong>Λ = 177.1</strong>：一度电喂给推理的毛收入是喂给挖矿的 177 倍（毛收入口径，未扣 GPU 折旧等非电成本）。</div>
 </div>
 
 <div class="cards">
   <div class="card"><div class="k">R_M · 挖矿每度电毛收入</div>
-    <div class="v copper">$0.0867</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
+    <div class="v copper">$0.0854</div><div class="d">美元/kWh，由链上数据自算 hashprice ÷ 全网加权能耗</div></div>
   <div class="card"><div class="k">R_A · 推理每度电毛收入</div>
-    <div class="v cobalt">$15.05</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
+    <div class="v cobalt">$15.12</div><div class="d">美元/kWh，用量加权模型篮子，标准 token 当量</div></div>
   <div class="card"><div class="k">Λ · 能量套利比</div>
-    <div class="v graphite">173.6</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
+    <div class="v graphite">177.1</div><div class="d">R_A / R_M，毛收入口径 · 链式接续序列 · chain-linked</div></div>
   <div class="card"><div class="k">Ω · 平价偏离指数</div>
-    <div class="v oxblood">5.463</div><div class="d">ln(焦耳平价汇率 / 市场隐含汇率)，防御性 vs 生产性耗散的定价缺口</div></div>
+    <div class="v oxblood">5.478</div><div class="d">ln(焦耳平价汇率 / 市场隐含汇率)，防御性 vs 生产性耗散的定价缺口</div></div>
 </div>
 
 <section class="charts">
@@ -158,7 +158,7 @@ footer a { color: var(--faint); }
 </footer>
 </div>
 
-<script>window.__PARITY__ = {"dates": ["2026-08-16", "2026-08-17", "2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23", "2026-08-24", "2026-08-25", "2026-08-26"], "series": {"R_M": [0.06587, 0.065614, 0.064936, 0.064349, 0.071155, 0.077712, 0.081129, 0.080158, 0.081666, 0.086372, 0.086682], "R_A": [15.4088, 14.7051, 16.1883, 16.1883, 15.6699, 15.8235, 14.7983, 14.6847, 14.7859, 15.0462, 15.0462], "Lambda": [233.93, 224.12, 249.3, 251.57, 220.22, 203.62, 182.4, 183.2, 181.05, 174.2, 173.58], "Omega": [null, 5.7416, 5.752, 5.7611, 5.6606, 5.5724, 5.5294, 5.5414, 5.5228, 5.4668, 5.4632]}};</script>
+<script>window.__PARITY__ = {"dates": ["2026-08-16", "2026-08-17", "2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23", "2026-08-24", "2026-08-25", "2026-08-26", "2026-08-27"], "series": {"R_M": [0.06587, 0.065614, 0.064936, 0.064349, 0.071155, 0.077712, 0.081129, 0.080158, 0.081666, 0.086372, 0.086682, 0.085415], "R_A": [15.4088, 14.7051, 16.1883, 16.1883, 15.6699, 15.8235, 14.7983, 14.6847, 14.7859, 15.0462, 15.0462, 15.1227], "Lambda": [233.93, 224.12, 249.3, 251.57, 220.22, 203.62, 182.4, 183.2, 181.05, 174.2, 173.58, 177.05], "Omega": [null, 5.7416, 5.752, 5.7611, 5.6606, 5.5724, 5.5294, 5.5414, 5.5228, 5.4668, 5.4632, 5.4779]}};</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
         onerror="document.getElementById('jscharts').style.display='none';document.getElementById('pngfallback').style.display='block';"></script>
 <script>
