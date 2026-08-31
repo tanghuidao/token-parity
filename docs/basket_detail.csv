@@ -51,3 +51,7 @@ date,model_id,weight_norm,usd_per_mtok,usd_per_mtok_alt,alt_price_id,j_per_token
 2026-08-30,deepseek/deepseek-v4-pro,0.2000,0.9765,3.9600,deepseek-v4-pro,1.500,53,0.9636,2.3436,0.468714,v1,live
 2026-08-30,google/gemini-3.7-flash,0.2500,3.7500,3.7500,gemini-3.7-flash,1.000,56,1.0182,13.5000,3.375000,v1,live
 2026-08-30,openai/gpt-5.5,0.2500,30.0000,30.0000,gpt-5.5,3.000,56,1.0182,36.0000,9.000000,v1,live
+2026-08-31,anthropic/claude-sonnet-5,0.3000,10.0000,10.0000,claude-sonnet-5,3.000,55,1.0000,12.0000,3.600000,v1,live
+2026-08-31,deepseek/deepseek-v4-pro,0.2000,3.2000,3.9600,deepseek-v4-pro,1.500,53,0.9636,7.6800,1.536000,v1,live
+2026-08-31,google/gemini-3.7-flash,0.2500,3.7500,3.7500,gemini-3.7-flash,1.000,56,1.0182,13.5000,3.375000,v1,live
+2026-08-31,openai/gpt-5.5,0.2500,30.0000,30.0000,gpt-5.5,3.000,56,1.0182,36.0000,9.000000,v1,live
