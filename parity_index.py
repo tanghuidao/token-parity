@@ -12,6 +12,8 @@ Token 能量平价指数（Token Energy Parity Index）
   Lambda  能量套利比 = R_A / R_M（同一度电的毛收入之比）
   Lambda_low/high  Λ 的置信带：篮子 jᵢ 取三档（低/中/高，docs/ji_source.md）
           逐模型替换后重新聚合的区间；主列 Λ 恒用中档点值，不受带列影响
+  Lambda_alt      第二源（LiteLLM 厂商牌价）平行计算的 Λ 稳健性对照列，
+          与主列同篮子同权重；主列恒用 OpenRouter 市场价，不受对照列影响
   Omega   平价偏离指数 = ln(焦耳平价汇率 / 市场隐含汇率)
           衡量市场对"防御性耗散"(BTC) vs "生产性耗散"(AI token) 的定价缺口
 
@@ -314,6 +316,11 @@ class Snapshot:
     R_A_high: float = None               # jᵢ 全取低档后的 R_A（$/kWh）
     Lambda_low: float = None             # R_A_low / R_M
     Lambda_high: float = None            # R_A_high / R_M
+    # 第二源稳健性对照（P1 2026-09-01 起）：LiteLLM 牌价平行计算的 Λ 对照。
+    # 仅对照列，不参与主列；第二源覆盖不完整时为 None。
+    R_A_alt: float = None                # 第二源牌价、同权重同 jᵢ 计算的 R_A
+    Lambda_alt: float = None             # R_A_alt / R_M
+    alt_deviation: float = None          # R_A_alt / R_A − 1（小数，0.02 = +2%）
 
 
 def chain_factor_for(version, path="chain_factors.json"):
@@ -447,6 +454,21 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
             b["weight_norm"] / aw * b["alt_usd_per_token"] for b in alt_covered) * 1e6
     else:
         basket_price_alt_mtok = None
+
+    # ── 第二源稳健性对照（L6 缓解，P1 2026-09-01 起）───────────────────
+    # 仅当覆盖完整（全部入选模型都有第二源牌价）时，用同一权重、同一 jᵢ（中档
+    # 点值）平行计算 R_A_alt / Lambda_alt——保证与主列同篮子同权重、直接可比；
+    # 部分覆盖时对照列置空。主列 R_A / Lambda 继续只用 OpenRouter 市场价，
+    # 本节对主列零影响。alt_deviation = R_A_alt / R_A − 1（小数，如 0.02 即 +2%）。
+    # 注意结构性差异：LiteLLM 为厂商牌价（阶梯粘性），OpenRouter 为市场价（日变），
+    # 偏离度本身是牌价-市场价折溢价的观测，并非"谁对谁错"。
+    if len(alt_covered) == len(priced):
+        R_A_alt = sum(b["weight_norm"] * b["alt_usd_per_token"]
+                      * (J_PER_KWH / b["j_per_token"]) for b in priced)
+        Lambda_alt = R_A_alt / R_M
+        alt_deviation = R_A_alt / R_A - 1.0
+    else:
+        R_A_alt = Lambda_alt = alt_deviation = None
     # 篮子的每焦耳标准token产出（用于平价汇率）
     basket_std_tok_per_j = sum(b["weight_norm"] * b["std_tok_per_j"] for b in priced)
 
@@ -495,6 +517,7 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
         Lambda_chained=Lambda_chained,
         R_A_low=R_A_low, R_A_high=R_A_high,
         Lambda_low=Lambda_low, Lambda_high=Lambda_high,
+        R_A_alt=R_A_alt, Lambda_alt=Lambda_alt, alt_deviation=alt_deviation,
     )
 
 
@@ -510,7 +533,10 @@ CSV_FIELDS = ["date", "btc_price_usd", "hashprice_usd_per_ph_day",
               "basket_version", "Lambda_chained",
               # 置信带四列（P0，2026-09-01 起）：jᵢ 三档口径的 Λ 区间。
               # 老序列行由 restval="" 自动补空；自 2026-09-01（含）起新行有值。
-              "R_A_low", "R_A_high", "Lambda_low", "Lambda_high"]
+              "R_A_low", "R_A_high", "Lambda_low", "Lambda_high",
+              # 第二源稳健性对照三列（P1，2026-09-01 起）：LiteLLM 牌价平行口径。
+              # alt_deviation 为小数（0.02 = +2%）；覆盖不完整时三列置空。
+              "R_A_alt", "Lambda_alt", "alt_deviation"]
 
 # 明细文件字段（basket_detail.csv）：每天每个入选模型一行。
 # 复现关系：当日 R_A = 该日全部行 contrib_R_A 之和（数值哨兵会自动核验）；
@@ -555,6 +581,10 @@ def append_csv(snap: Snapshot, path: str):
         "R_A_high": "" if snap.R_A_high is None else f"{snap.R_A_high:.4f}",
         "Lambda_low": "" if snap.Lambda_low is None else f"{snap.Lambda_low:.2f}",
         "Lambda_high": "" if snap.Lambda_high is None else f"{snap.Lambda_high:.2f}",
+        "R_A_alt": "" if snap.R_A_alt is None else f"{snap.R_A_alt:.4f}",
+        "Lambda_alt": "" if snap.Lambda_alt is None else f"{snap.Lambda_alt:.2f}",
+        "alt_deviation": "" if snap.alt_deviation is None
+                         else f"{snap.alt_deviation:+.4f}",
     })
     rows.sort(key=lambda r: r["date"])
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -646,6 +676,10 @@ def print_report(snap: Snapshot):
         print(f"  Λ 带  jᵢ三档置信带     [{snap.Lambda_low:>6.1f}, {snap.Lambda_high:.1f}]"
               f"  （R_A ∈ [{snap.R_A_low:.2f}, {snap.R_A_high:.2f}] $/kWh；"
               f"jᵢ 低/高档逐模型替换，主列不受影响）")
+    if snap.Lambda_alt is not None:
+        print(f"  Λ_alt 二源稳健性对照    {snap.Lambda_alt:>6.1f}"
+              f"  （LiteLLM 牌价口径，R_A_alt={snap.R_A_alt:.2f} $/kWh，"
+              f"偏离主源 {snap.alt_deviation*100:+.1f}%；仅对照，不参与主列）")
     if snap.rho_parity_tok_per_btc is None:
         print("  ρ*    焦耳平价汇率        (待质量基准数据上线)")
     else:
@@ -755,6 +789,15 @@ def sanity_check(snap: Snapshot, csv_path: str):
             warns.append(f"置信带哨兵失败：Λ={snap.Lambda:.1f} 不在 "
                          f"[{snap.Lambda_low:.1f}, {snap.Lambda_high:.1f}] 内，"
                          f"请检查三档 jᵢ 配置（低档应 < 中档 < 高档）")
+
+    # 第二源对照哨兵（L6 缓解）：偏离超 ±15% 或覆盖不完整时告警。
+    # 历史观测最大偏离 +9.8%（2026-08-23），15% 阈值留有安全边际；
+    # 触发时优先核查两源口径（如上游改键名、币种、计价单位）。
+    if snap.alt_deviation is not None and abs(snap.alt_deviation) > 0.15:
+        warns.append(f"第二源对照偏离 {snap.alt_deviation*100:+.1f}% 超过 ±15%，"
+                     f"请核查两源价格口径")
+    if snap.R_A_alt is None:
+        warns.append(f"第二源覆盖不完整（{snap.alt_coverage}），本日对照列置空")
 
     # 读取 CSV 末行，用于日期去重与 Λ 变动检查
     last_date, last_lambda = None, None
