@@ -1,0 +1,2 @@
+﻿quarter,ref_date,R_A_usd_per_kwh,R_A_prime_cash,R_A_prime_full,R_M_usd_per_kwh,R_M_prime_cash,R_M_prime_full,Lambda,Lambda_prime_cash,m_A_cash,m_A_full,m_M_cash,m_M_full,source,notes
+2026Q2,2026-08-31,17.5110,10.33,-0.35,0.080861,0.0246,-0.0275,216.56,420.3,0.59,-0.02,0.304,-0.34,manual_v1,推理侧锚=CoreWeave Q2 adj EBITDA 59%（CS托管段59%交叉印证;Nebius 41%为下界）;挖矿侧=Riot/MARA/CLSK现金口径中位30.4%;全成本中位-34%;CHR式对照10.4(现金)/2.2(含折旧);阶段一试算见docs/lambda_prime.md
