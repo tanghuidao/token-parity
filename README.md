@@ -21,6 +21,16 @@
 
 **篮子代表性口径声明**：当前篮子（v1）为**前沿 reasoning 模型篮子**（加权均价约 $11.44/百万 token），Λ 度量的是前沿推理口径的能量套利比，**不代表全 AI 行业平均水平**。产业界常说的"20–25 倍"对应**走量（commodity）模型口径**（均价约 $1/百万 token）。两口径各自自洽，详见 `docs/ji_source.md` 与国外对标 Compute Heat Rate（CHR，Hans Royal 提出）的交叉验证。
 
+## Λ 置信带（jᵢ 三档）
+
+jᵢ（单 token 能耗）是本指数最薄弱的输入（局限 L5）。自 2026-09-01（P0）起，主序列新增四列置信带：`R_A_low / R_A_high / Lambda_low / Lambda_high`。
+
+- **三档取值**：每个篮子模型配低/中/高三档 jᵢ（同 D′ 口径：全栈 ÷ 计费输出 token 含思考），中档 = 主列点值，三档表与逐项出处见 `docs/ji_source.md` §9.3。
+- **计算定义**：逐模型把 jᵢ 替换为低/高档（价格、权重一律不变）后重新聚合，**而非对加权均值 j̄ 整体缩放**——jᵢ 低档 → R_A_high / Lambda_high，jᵢ 高档 → R_A_low / Lambda_low。
+- **主列零影响**：`R_A / Lambda / Lambda_chained / Omega` 等全部主列恒用中档点值，口径与历史数值不变；置信带仅为附加区间列，历史行留空（自 2026-09-01 起新行有值，不回填）。
+- **复现承诺**：与 R_A = Σ contrib_R_A 相同，`basket_detail.csv` 新增 `j_per_token_low/high` 与 `contrib_R_A_low/high` 列，逐行求和即可复现两个边界值，数值哨兵每次写入前自动核验。
+- 参考：换篮子（basket_version 递增）后，chained 口径的置信带 = 当日链式系数 × Lambda_low/high。
+
 ## 换算链条（全部显式，可逐步核对）
 
 挖矿侧：

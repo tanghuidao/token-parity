@@ -10,6 +10,8 @@ Token 能量平价指数（Token Energy Parity Index）
   R_M     挖矿每千瓦时毛收入（美元/kWh）
   R_A     推理每千瓦时毛收入（美元/kWh，按用量加权的模型篮子）
   Lambda  能量套利比 = R_A / R_M（同一度电的毛收入之比）
+  Lambda_low/high  Λ 的置信带：篮子 jᵢ 取三档（低/中/高，docs/ji_source.md）
+          逐模型替换后重新聚合的区间；主列 Λ 恒用中档点值，不受带列影响
   Omega   平价偏离指数 = ln(焦耳平价汇率 / 市场隐含汇率)
           衡量市场对"防御性耗散"(BTC) vs "生产性耗散"(AI token) 的定价缺口
 
@@ -71,8 +73,12 @@ DEFAULT_CONFIG = {
     # ---------------- 推理侧 ----------------
     # 模型篮子：id 必须与 OpenRouter /api/v1/models 返回的 id 一致。
     # weight        用量权重（建议参考 OpenRouter rankings 页面，手动更新，会自动归一化）
-    # j_per_token   该模型输出 token 的全栈能耗估计（焦耳/输出 token，含数据中心 PUE）
-    #               来源：Epoch AI、厂商披露、学术测量。粗模型的量级在 0.5–5 J/token。
+    # j_per_token   该模型输出 token 的全栈能耗估计（焦耳/输出 token，含数据中心 PUE）。
+    #               中档点值 = 主口径（R_A/Lambda 等全部主列用此值），政策内参数。
+    # j_per_token_low / j_per_token_high
+    #               jᵢ 的低/高档估计（同口径 D′：全栈 ÷ 计费输出 token 含思考）。
+    #               仅用于置信带列（R_A_low/high、Lambda_low/high），不参与主列计算。
+    #               三档取值与出处见 docs/ji_source.md §9.3（2026-09-01 落地，P0）。
     # quality_ref   是否作为质量基准模型（恰好一个为 true）
     # quality_score 该模型的外部基准综合分（如 Artificial Analysis Intelligence Index），
     #               必须来自价格以外的独立评测源。全部模型都有分数时 Ω 才会计算。
@@ -83,18 +89,22 @@ DEFAULT_CONFIG = {
     #               用于对 OpenRouter 市场价做治理独立的交叉验证。找不到时置 None。
     "inference_basket": [
         {"id": "anthropic/claude-sonnet-5",       "weight": 0.30, "j_per_token": 3.0,
+         "j_per_token_low": 1.5, "j_per_token_high": 4.5,   # 三档：ji_source.md §9.3
          "quality_ref": True, "quality_score": 55,  # 变体 Claude Sonnet 5 (Adaptive Reasoning, Max Effort) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
          "alt_price_id": "claude-sonnet-5",
         },
         {"id": "openai/gpt-5.5",                  "weight": 0.25, "j_per_token": 3.0,
+         "j_per_token_low": 1.5, "j_per_token_high": 5.0,   # 三档：ji_source.md §9.3
          "quality_score": 56,  # 变体 GPT-5.5 (xhigh) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
          "alt_price_id": "gpt-5.5",
         },
         {"id": "google/gemini-3.7-flash",         "weight": 0.25, "j_per_token": 1.0,
+         "j_per_token_low": 0.5, "j_per_token_high": 1.5,   # 三档：ji_source.md §9.3
          "quality_score": 56,  # 变体 Gemini 3.7 Flash (high) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
          "alt_price_id": "gemini-3.7-flash",
         },
         {"id": "deepseek/deepseek-v4-pro",        "weight": 0.20, "j_per_token": 1.5,
+         "j_per_token_low": 1.0, "j_per_token_high": 2.5,   # 三档：ji_source.md §9.3
          "quality_score": 53,  # 变体 DeepSeek V4 Pro 0813 (Reasoning, Max Effort) | AA Intelligence Index v4.1.1 | 2026-08-16 | 口径: 各模型最高已评档
          "alt_price_id": "deepseek-v4-pro",
         },
@@ -298,6 +308,12 @@ class Snapshot:
     source: str
     basket_version: str = "v1"           # 篮子版本号，用于 Λ 链式接续
     Lambda_chained: float = 0.0          # Λ × 链式系数，网页与分析用此列
+    # 置信带（jᵢ 三档口径，P0 2026-09-01 起）。任一篮子模型缺三档配置时为 None。
+    # 注意与 jᵢ 的反向关系：jᵢ 低档 → R_A_high/Lambda_high；jᵢ 高档 → R_A_low/Lambda_low。
+    R_A_low: float = None                # jᵢ 全取高档后的 R_A（$/kWh）
+    R_A_high: float = None               # jᵢ 全取低档后的 R_A（$/kWh）
+    Lambda_low: float = None             # R_A_low / R_M
+    Lambda_high: float = None            # R_A_high / R_M
 
 
 def chain_factor_for(version, path="chain_factors.json"):
@@ -386,11 +402,36 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
         # 该模型对 R_A 的贡献（美元/kWh）。恒等式 R_A = Σ contrib_R_A 即
         # 明细文件对主序列的复现关系，见 basket_detail.csv。
         b["contrib_R_A"] = b["weight_norm"] * b["usd_per_kwh"]
+        # 置信带贡献（jᵢ 三档）：价格、权重不变，只替换 jᵢ。反向关系：
+        # jᵢ 低档 → contrib_R_A_high（每度电收入更高）；jᵢ 高档 → contrib_R_A_low。
+        # 模型缺三档配置时置 None，整条带随后统一放弃（见下方 has_tiers）。
+        j_lo, j_hi = b.get("j_per_token_low"), b.get("j_per_token_high")
+        b["contrib_R_A_high"] = (None if j_lo is None else
+                                 b["weight_norm"] * b["usd_per_token"]
+                                 * (J_PER_KWH / j_lo))
+        b["contrib_R_A_low"] = (None if j_hi is None else
+                                b["weight_norm"] * b["usd_per_token"]
+                                * (J_PER_KWH / j_hi))
         # 第二源（厂商牌价）单价，仅作交叉验证列
         b["alt_usd_per_token"] = raw.alt_prices_usd_per_token.get(b["id"])
 
     # 篮子 R_A：按用量权重加权的每千瓦时收入（与 quality_weight 无关，恒可算）
     R_A = sum(b["contrib_R_A"] for b in priced)
+
+    # ── 置信带（jᵢ 三档，docs/ji_source.md §9.3，P0 2026-09-01 起）─────────
+    # 定义：逐模型把 jᵢ 替换为低/高档（价格、权重一律不变）后重新聚合，
+    # 而非对加权均值 j̄ 整体缩放——三档表是逐模型的，逐模型替换才是其精确含义。
+    # 只有全部入选模型都配置了三档时才发布置信带（与 quality_score 的处理一致）；
+    # 主列 R_A / Lambda / Omega 与本节完全无关，缺三档时仅带列置空。
+    has_tiers = all(b.get("j_per_token_low") is not None
+                    and b.get("j_per_token_high") is not None for b in priced)
+    if has_tiers:
+        R_A_high = sum(b["contrib_R_A_high"] for b in priced)   # jᵢ 全取低档
+        R_A_low = sum(b["contrib_R_A_low"] for b in priced)     # jᵢ 全取高档
+        Lambda_low = R_A_low / R_M
+        Lambda_high = R_A_high / R_M
+    else:
+        R_A_low = R_A_high = Lambda_low = Lambda_high = None
     # 注意：以下两个是"描述性均值"，仅供概览。由于逐模型聚合（先除后加）与
     # 均值相除（先加后除）不可交换，basket_price × 3.6e6 / basket_j ≠ R_A
     # 属于数学必然而非错误；R_A 的精确复现请用 basket_detail.csv 逐行求和。
@@ -428,8 +469,10 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
 
     detail = [{k: b.get(k) for k in
                ("id", "weight_norm", "usd_per_token", "alt_usd_per_token",
-                "alt_price_id", "j_per_token", "quality_score",
-                "quality_weight", "usd_per_kwh", "contrib_R_A")} for b in priced]
+                "alt_price_id", "j_per_token", "j_per_token_low",
+                "j_per_token_high", "quality_score", "quality_weight",
+                "usd_per_kwh", "contrib_R_A", "contrib_R_A_low",
+                "contrib_R_A_high")} for b in priced]
 
     return Snapshot(
         date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
@@ -450,6 +493,8 @@ def compute(raw: RawData, cfg: dict) -> Snapshot:
         source=raw.source,
         basket_version=version,
         Lambda_chained=Lambda_chained,
+        R_A_low=R_A_low, R_A_high=R_A_high,
+        Lambda_low=Lambda_low, Lambda_high=Lambda_high,
     )
 
 
@@ -462,14 +507,20 @@ CSV_FIELDS = ["date", "btc_price_usd", "hashprice_usd_per_ph_day",
               "basket_price_alt_usd_per_mtok", "alt_coverage",
               "R_M", "R_A", "Lambda", "Omega",
               "rho_parity_tok_per_btc", "rho_market_tok_per_btc", "source",
-              "basket_version", "Lambda_chained"]
+              "basket_version", "Lambda_chained",
+              # 置信带四列（P0，2026-09-01 起）：jᵢ 三档口径的 Λ 区间。
+              # 老序列行由 restval="" 自动补空；自 2026-09-01（含）起新行有值。
+              "R_A_low", "R_A_high", "Lambda_low", "Lambda_high"]
 
 # 明细文件字段（basket_detail.csv）：每天每个入选模型一行。
-# 复现关系：当日 R_A = 该日全部行 contrib_R_A 之和（数值哨兵会自动核验）。
+# 复现关系：当日 R_A = 该日全部行 contrib_R_A 之和（数值哨兵会自动核验）；
+# 同理 R_A_low/high = Σ contrib_R_A_low/high（数值哨兵一并核验）。
 DETAIL_FIELDS = ["date", "model_id", "weight_norm",
                  "usd_per_mtok", "usd_per_mtok_alt", "alt_price_id",
-                 "j_per_token", "quality_score", "quality_weight",
-                 "usd_per_kwh", "contrib_R_A", "basket_version", "source"]
+                 "j_per_token", "j_per_token_low", "j_per_token_high",
+                 "quality_score", "quality_weight",
+                 "usd_per_kwh", "contrib_R_A", "contrib_R_A_low",
+                 "contrib_R_A_high", "basket_version", "source"]
 
 
 def append_csv(snap: Snapshot, path: str):
@@ -500,6 +551,10 @@ def append_csv(snap: Snapshot, path: str):
         "source": snap.source,
         "basket_version": snap.basket_version,
         "Lambda_chained": f"{snap.Lambda_chained:.2f}",
+        "R_A_low": "" if snap.R_A_low is None else f"{snap.R_A_low:.4f}",
+        "R_A_high": "" if snap.R_A_high is None else f"{snap.R_A_high:.4f}",
+        "Lambda_low": "" if snap.Lambda_low is None else f"{snap.Lambda_low:.2f}",
+        "Lambda_high": "" if snap.Lambda_high is None else f"{snap.Lambda_high:.2f}",
     })
     rows.sort(key=lambda r: r["date"])
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -533,11 +588,23 @@ def append_detail_csv(snap: Snapshot, path: str):
                 else f"{b['alt_usd_per_token'] * 1e6:.4f}",
             "alt_price_id": b.get("alt_price_id") or "",
             "j_per_token": f"{b['j_per_token']:.3f}",
+            "j_per_token_low":
+                "" if b.get("j_per_token_low") is None
+                else f"{b['j_per_token_low']:.3f}",
+            "j_per_token_high":
+                "" if b.get("j_per_token_high") is None
+                else f"{b['j_per_token_high']:.3f}",
             "quality_score":
                 "" if b.get("quality_score") is None else f"{b['quality_score']}",
             "quality_weight": f"{b['quality_weight']:.4f}",
             "usd_per_kwh": f"{b['usd_per_kwh']:.4f}",
             "contrib_R_A": f"{b['contrib_R_A']:.6f}",
+            "contrib_R_A_low":
+                "" if b.get("contrib_R_A_low") is None
+                else f"{b['contrib_R_A_low']:.6f}",
+            "contrib_R_A_high":
+                "" if b.get("contrib_R_A_high") is None
+                else f"{b['contrib_R_A_high']:.6f}",
             "basket_version": snap.basket_version,
             "source": snap.source,
         })
@@ -575,6 +642,10 @@ def print_report(snap: Snapshot):
     print(f"  R_M   挖矿每度电毛收入   {snap.R_M:>12.4f}  美元/kWh")
     print(f"  R_A   推理每度电毛收入   {snap.R_A:>12.2f}  美元/kWh")
     print(f"  Λ     能量套利比        {snap.Lambda:>12.1f}  （毛收入口径，非利润；链式 {snap.basket_version} 系数×Λ={snap.Lambda_chained:.1f}）")
+    if snap.Lambda_low is not None:
+        print(f"  Λ 带  jᵢ三档置信带     [{snap.Lambda_low:>6.1f}, {snap.Lambda_high:.1f}]"
+              f"  （R_A ∈ [{snap.R_A_low:.2f}, {snap.R_A_high:.2f}] $/kWh；"
+              f"jᵢ 低/高档逐模型替换，主列不受影响）")
     if snap.rho_parity_tok_per_btc is None:
         print("  ρ*    焦耳平价汇率        (待质量基准数据上线)")
     else:
@@ -664,9 +735,26 @@ def sanity_check(snap: Snapshot, csv_path: str):
 
     # 复现性自检：明细贡献求和必须等于 R_A（浮点容差 1e-9 相对误差）。
     # 这是 basket_detail.csv 对主序列的复现承诺，写入前先自己验一遍。
+    # 置信带两列同样核验（Σ contrib_R_A_low/high = R_A_low/high）。
     contrib_sum = sum(b["contrib_R_A"] for b in snap.basket_detail)
     if snap.R_A > 0 and abs(contrib_sum - snap.R_A) / snap.R_A > 1e-9:
         warns.append(f"复现性自检失败：Σcontrib={contrib_sum:.6f} ≠ R_A={snap.R_A:.6f}")
+    if snap.R_A_low is not None:
+        for col, target in (("contrib_R_A_low", snap.R_A_low),
+                            ("contrib_R_A_high", snap.R_A_high)):
+            csum = sum(b[col] for b in snap.basket_detail
+                       if b.get(col) is not None)
+            if target > 0 and abs(csum - target) / target > 1e-9:
+                warns.append(f"置信带复现性自检失败：Σ{col}={csum:.6f} ≠ "
+                             f"{target:.6f}")
+
+    # 置信带哨兵：中档点值必须落在区间内。数学上必然成立（逐模型单调），
+    # 违反即说明三档 jᵢ 配置写反了档位，须在写入前发现。
+    if snap.Lambda_low is not None:
+        if not (snap.Lambda_low <= snap.Lambda <= snap.Lambda_high):
+            warns.append(f"置信带哨兵失败：Λ={snap.Lambda:.1f} 不在 "
+                         f"[{snap.Lambda_low:.1f}, {snap.Lambda_high:.1f}] 内，"
+                         f"请检查三档 jᵢ 配置（低档应 < 中档 < 高档）")
 
     # 读取 CSV 末行，用于日期去重与 Λ 变动检查
     last_date, last_lambda = None, None
