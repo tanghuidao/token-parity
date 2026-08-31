@@ -119,6 +119,7 @@ git stash pop && python parity_index.py --dry-run    # 记下输出的 Λ_raw(�
 | 单token能耗 | 人工设定工作假设，溯源与口径见 `docs/ji_source.md` | **手动** |
 | 篮子用量权重 | OpenRouter rankings 页 | **手动，建议每月** |
 | 质量分（Ω 用） | Artificial Analysis Intelligence Index | **手动，季度复查** |
+| 历史回填（RM 侧，月频至 2010-07） | blockchain.info charts（价格/算力/手续费，日频） | **一次性脚本** `backfill_rm.py`，能效历史表见 `docs/efficiency_history_source.md` |
 
 hashprice 不直接抓 Luxor（需要 API key），而是用公开链上数据从定义式自行计算，结果与 Luxor 指数一致（见上文自校验）。
 
@@ -159,10 +160,10 @@ hashprice 不直接抓 Luxor（需要 API key），而是用公开链上数据�
 ## 升级路线
 
 - [ ] Λ' 利润率版本（季频，财报校准）
-- [ ] 能效参数三档敏感性区间，输出置信带
+- [x] 能效参数三档敏感性区间，输出置信带（2026-09-01 上线，见「Λ 置信带」小节）
 - [ ] 享乐定价质量调整（分项评测分数 → 影子价格），及 Ω 换篮接续行为的首次实证
 - [ ] BTC 计价 hashprice 序列（剥离币价方差，供协整检验用）
-- [ ] 历史回填：CBECI 能耗序列 + 价格存档，把序列推回 2023（source=backfill 标记，与 live 永不混同）
+- [x] 历史回填·挖矿侧（O1a，2026-09-01）：`backfill_rm.py` + `docs/rm_history.csv`（月频至 2010-07，独立序列不进主序列，能效历史表初稿待溯源定稿见 `docs/efficiency_history_source.md`）；历史回填·推理侧（O1b，"历史前沿篮子"）另立项
 - [ ] x402/USDC 交易级数据接入，用真实机器间成交价校准 R_A
 - [ ] TEPI 独立 Zenodo 记录（版本化数据集 + 方法论双文档，目标：序列满 30 天时存缴，DOI 回填引用条目）
 
