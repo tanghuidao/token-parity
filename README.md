@@ -19,6 +19,8 @@
 
 序列起点：2026-08-16（篮子 v1）。质量分于同日采纳，Ω 自 2026-08-17（采纳后首个例行运行日）起进入发布序列。
 
+**篮子代表性口径声明**：当前篮子（v1）为**前沿 reasoning 模型篮子**（加权均价约 $11.44/百万 token），Λ 度量的是前沿推理口径的能量套利比，**不代表全 AI 行业平均水平**。产业界常说的"20–25 倍"对应**走量（commodity）模型口径**（均价约 $1/百万 token）。两口径各自自洽，详见 `docs/ji_source.md` 与国外对标 Compute Heat Rate（CHR，Hans Royal 提出）的交叉验证。
+
 ## 换算链条（全部显式，可逐步核对）
 
 挖矿侧：
@@ -104,7 +106,7 @@ git stash pop && python parity_index.py --dry-run    # 记下输出的 Λ_raw(�
 | 推理价格（主源） | OpenRouter /api/v1/models | 自动 |
 | 推理价格（第二源，交叉验证） | LiteLLM model_prices 表（厂商直连牌价） | 自动 |
 | 矿机队列能效 | CBECI / Hashrate Index 机型统计 | **手动，建议每季度** |
-| 单token能耗 | Epoch AI / 厂商披露 | **手动** |
+| 单token能耗 | 人工设定工作假设，溯源与口径见 `docs/ji_source.md` | **手动** |
 | 篮子用量权重 | OpenRouter rankings 页 | **手动，建议每月** |
 | 质量分（Ω 用） | Artificial Analysis Intelligence Index | **手动，季度复查** |
 
@@ -139,6 +141,10 @@ hashprice 不直接抓 Luxor（需要 API key），而是用公开链上数据�
 1. Actions 出问题时，到仓库 Actions 页 → daily-parity-index → "Run workflow" 手动补跑一次。
 2. 数值哨兵（sanity_check）只在 Actions 日志里发 `::warning::`，不会让任务失败——黄色警告出现时人工检查即可。
 3. 上游抓取失败时保留前一日已发布文件，序列不断档、不造数。
+
+## 国外对标
+
+本指数最接近的同赛道对标是 **Compute Heat Rate（CHR）**，由 Hans Royal 提出、2026 年被 PJM 电网白皮书引用：同样把 AI 推理折算到能源口径（美元/kWh），其混合口径 R_w ≈ $12.5/kWh 与 TEPI 的 R_A ≈ $15.4/kWh 同量级（TEPI 为前沿篮子口径），构成独立方法的交叉验证；CHR 隐含的单 token 能耗 1.1–2.8 J/token 亦与 TEPI 篮子 jᵢ（1.0–3.0）独立收敛。TEPI 相对 CHR 的差异化：日频序列 + 完全开源（CHR 历史仅 2 个季度且数据不开放）、链式接续处理模型更替、质量调整项（Ω）。逐维度对比见研究文档《CHR vs TEPI 逐条对比》。
 
 ## 升级路线
 
