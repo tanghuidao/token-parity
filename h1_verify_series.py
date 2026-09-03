@@ -15,35 +15,48 @@ h1_verify_series.py —— H1 品类 seriesID 存在性核验（BLS v2 API catal
    但文件过大、AI 摘要无法做 137 项的精确匹配）。
   BLS v2 API（api.bls.gov）经实测在 GitHub Action runner 上可达（abundantics 的
   bls-daily 已稳定成功），且支持 catalog=true 返回每个 series 的官方元数据
-  （series_title / begin_year / end_year / item / area 等），能一次性拿到
-  「存在性 + 官方标题 + 起始年份」，与 cu.series 的 begin_year 语义完全一致。
+  （series_title / seasonality / survey_name / measure_data_type / area 等），
+  可精确判断存在性并核对官方标题。
 
 存在性判断（关键，规避「年份无数据」干扰）：
   BLS 对「格式正确但不存在的 seriesid」返回 message "Series does not exist..."，
   且该 series 的 catalog 为空；对「存在但请求年份无数据」的 series 返回
   "No Data Available for Series X Year: YYYY"，但 catalog 仍非空。
-  因此以 catalog 是否非空作为「存在」的唯一判据，不依赖 data 是否非空。
+  因此以 catalog 是否含 series_title 作为「存在」的唯一判据，不依赖 data 是否非空。
+
+数据起始年份（BLS v2 API 局限下的降级方案）：
+  BLS v2 API 的 catalog 对象**不返回 begin_year**（官方字段仅 series_title /
+  series_id / seasonality / survey_name / survey_abbreviation / measure_data_type /
+  area 等）。真实 begin_year 只能从 download.bls.gov 的 cu.series 扁平文件
+  （runner 403）或多次回溯 data 请求获取。
+  本项目世纪图表窗口为 1998 至今（BLS CPI 1998 年细项目录重组，为稳定起点），
+  故「数据起始年份」回填「窗口内最早观测年份」：
+    · 最早观测 = 1998 → 填「≤1998」（覆盖世纪窗口起点，真实 begin_year ≤ 1998）
+    · 最早观测 > 1998 → 填精确年份（1998 后新增的系列）
+  该字段语义为「世纪窗口内最早有效年份」，与老品类的真实 begin_year 不同，
+  在核验报告中一并说明。
 
 时间窗口（BLS 注册 key 单次 ≤20 年）：
-  主块 2000-2019（20 年）覆盖老系列；副块 2020-2025（6 年）覆盖近年新增系列。
-  主块未命中（catalog 空）的 seriesID 进入副块二次确认，两块都空才判「不存在」。
+  主块 1998-2017（20 年）覆盖世纪窗口起点 + 老系列；副块 2018-2025（8 年）覆盖
+  近年新增系列。主块未命中（catalog 空）的 seriesID 进入副块二次确认，两块都空
+  才判「不存在」。
 
 环境要求：
   需 BLS_API_KEY（GitHub Actions Secret，api.bls.gov 免费 key）。本地开发网络
   无法直连 api.bls.gov，故实际运行放在 GitHub Action。本地仅可
-  `--catalog <fixture.json>` 用预抓取的 catalog 映射做离线回归。
+  `--catalog <fixture.json>` 用预抓取的目录映射做离线回归。
 
 行为：
   · 只处理「状态 == 待核实」的行（老「已核实」/「降级」行不动，「已核实」做
     sanity check 报告）。
-  · 存在 → 状态翻「已核实」，数据起始年份 = catalog.begin_year。
+  · 存在 → 状态翻「已核实」，数据起始年份 = 窗口内最早观测年份（≤1998 / 精确值）。
   · 不存在 → 保持「待核实」，写入报告「未通过核验」清单，进程以非零退出（fail loud）。
   · 始终写回 category_mapping.csv（存在的已转正）+ docs/h1_series_verification.md 报告。
   单一信息源：category_mapping.csv 仍是被 fetch/analyze 只读的源头，本脚本只是其核验器。
 
 用法：
   python h1_verify_series.py                  # 在线：BLS v2 API 核验（GitHub Action 用）
-  python h1_verify_series.py --catalog cat.json   # 离线：读本地 catalog fixture 核验/回归
+  python h1_verify_series.py --catalog cat.json   # 离线：读本地目录 fixture 核验/回归
 """
 import argparse
 import csv
@@ -67,8 +80,9 @@ STATUS_DONE = "已核实"
 STATUS_DOWNGRADE = "降级"
 
 BATCH = 50                # BLS 注册 key 单次查询最多 50 series
-BLOCK_MAIN = ("2000", "2019")    # 主时间块：覆盖绝大多数老系列的活跃期
-BLOCK_RECENT = ("2020", "2025")  # 副时间块：覆盖近年新增系列
+WINDOW_START = 1998       # 世纪图表窗口起点（BLS CPI 1998 细项目录重组）
+BLOCK_MAIN = ("1998", "2017")    # 主时间块：覆盖世纪窗口起点 + 绝大多数老系列
+BLOCK_RECENT = ("2018", "2025")  # 副时间块：覆盖近年新增系列
 TIMEOUT = 60
 
 # category_mapping.csv 的列顺序（写回时固定，避免列序漂移）
@@ -104,7 +118,8 @@ def write_mapping(rows: list, path: str) -> None:
 
 
 def query_batch(series_ids: list, key: str, startyear: str, endyear: str) -> dict:
-    """POST 一批 seriesid，返回 {series_id: catalog_dict}。catalog 空/缺失 = 不存在。"""
+    """POST 一批 seriesid，返回 {series_id: {"title": str, "earliest": int|None}}。
+    title 空 = 不存在（catalog 空）；earliest = 该窗口内最早观测年份。"""
     payload = {
         "seriesid": series_ids,
         "startyear": startyear,
@@ -120,39 +135,65 @@ def query_batch(series_ids: list, key: str, startyear: str, endyear: str) -> dic
     out = {}
     for s in data.get("Results", {}).get("series", []):
         sid = s.get("seriesID", "")
-        out[sid] = s.get("catalog") or {}
+        cat = s.get("catalog") or {}
+        title = str(cat.get("series_title") or "").strip()
+        earliest = None
+        for d in s.get("data", []):
+            try:
+                y = int(d.get("year"))
+            except (TypeError, ValueError):
+                continue
+            if earliest is None or y < earliest:
+                earliest = y
+        out[sid] = {"title": title, "earliest": earliest}
     return out
 
 
 def build_catalog_online(series_ids: list, key: str) -> dict:
-    """在线核验：两时间块分批查询，返回 {series_id: catalog_dict}（仅存在的 series 有非空 catalog）。"""
-    catalog = {}
+    """在线核验：两时间块分批查询，返回 {series_id: {"title", "earliest"}}（仅存在的 series）。"""
+    result = {}
     # 主块
     for batch in chunks(series_ids, BATCH):
         got = query_batch(batch, key, *BLOCK_MAIN)
         for sid in batch:
-            cat = got.get(sid) or {}
-            if cat:
-                catalog[sid] = cat
+            info = got.get(sid)
+            if info and info["title"]:
+                result[sid] = info
     # 副块：主块未命中的
-    remaining = [sid for sid in series_ids if sid not in catalog]
+    remaining = [sid for sid in series_ids if sid not in result]
     if remaining:
         for batch in chunks(remaining, BATCH):
             got = query_batch(batch, key, *BLOCK_RECENT)
             for sid in batch:
-                cat = got.get(sid) or {}
-                if cat:
-                    catalog[sid] = cat
-    return catalog
+                info = got.get(sid)
+                if info and info["title"]:
+                    result[sid] = info
+    return result
 
 
 def load_catalog_fixture(path: str) -> dict:
-    """离线回归：读本地 catalog fixture（{series_id: {"series_title":..., "begin_year":...}}）。"""
+    """离线回归：读本地目录 fixture（{series_id: {"title":..., "earliest":...}}）。"""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, dict):
-        raise RuntimeError("catalog fixture 需为 JSON object：{series_id: {series_title, begin_year}}")
-    return {k: (v or {}) for k, v in data.items()}
+        raise RuntimeError("目录 fixture 需为 JSON object")
+    out = {}
+    for k, v in data.items():
+        v = v or {}
+        out[k] = {
+            "title": str(v.get("title") or v.get("series_title") or "").strip(),
+            "earliest": v.get("earliest"),
+        }
+    return out
+
+
+def begin_year_label(earliest) -> str:
+    """把「窗口内最早观测年份」格式化为「数据起始年份」回填值。"""
+    if earliest is None:
+        return ""
+    if earliest <= WINDOW_START:
+        return f"≤{WINDOW_START}"
+    return str(earliest)
 
 
 def write_report(report: dict, path: str) -> None:
@@ -162,7 +203,8 @@ def write_report(report: dict, path: str) -> None:
     L.append(f"- 核验时间：{report['verified_at']}")
     L.append(f"- 数据源：BLS v2 API（`{BLS_API}`，`catalog=true`，口径 {PREFIX} 全国 CPI-U 未季调）")
     L.append(f"- 核验对象：category_mapping.csv 中「待核实」的 {report['todo_total']} 个 seriesID")
-    L.append(f"- 结论：✅ 通过 {report['found_count']} 项 / ⚠️ 未通过 {report['not_found_count']} 项\n")
+    L.append(f"- 结论：✅ 通过 {report['found_count']} 项 / ⚠️ 未通过 {report['not_found_count']} 项")
+    L.append(f"- 说明：「数据起始年份」回填的是世纪窗口内最早观测年份（窗口起点 {WINDOW_START}，BLS CPI 1998 细项目录重组）；≤{WINDOW_START} 表示真实 begin_year ≤ {WINDOW_START}，BLS v2 API catalog 不提供真实 begin_year\n")
 
     L.append("## 一、未通过核验（需人工复核，seriesID 在 BLS 目录中不存在）\n")
     if report["not_found"]:
@@ -185,12 +227,11 @@ def write_report(report: dict, path: str) -> None:
     L.append("")
 
     L.append("## 三、老品类「已核实」sanity check（不动，仅复核存在性）\n")
-    L.append("| series_id | 中文品类名 | 在 BLS 目录 | 官方起始年份 vs 映射起始年份 |")
+    L.append("| series_id | 中文品类名 | 在 BLS 目录 | 窗口内最早年份 |")
     L.append("|---|---|---|---|")
     for it in report["old_check"]:
         mark = "✅" if it["in_catalog"] else "❌"
-        cmp_txt = f"{it['catalog_begin']} vs {it['mapped_begin']}" if it["in_catalog"] else "-"
-        L.append(f"| `{it['series_id']}` | {it['zh']} | {mark} | {cmp_txt} |")
+        L.append(f"| `{it['series_id']}` | {it['zh']} | {mark} | {it['earliest']} |")
     L.append("")
 
     with open(path, "w", encoding="utf-8") as f:
@@ -199,7 +240,7 @@ def write_report(report: dict, path: str) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="H1 品类 seriesID 存在性核验（BLS v2 API catalog）")
-    ap.add_argument("--catalog", default=None, help="本地 catalog fixture JSON 路径（离线回归用）；缺省在线 BLS v2 API")
+    ap.add_argument("--catalog", default=None, help="本地目录 fixture JSON 路径（离线回归用）；缺省在线 BLS v2 API")
     ap.add_argument("--mapping", default=MAPPING_CSV, help=f"category_mapping.csv 路径（缺省 {MAPPING_CSV}）")
     ap.add_argument("--report", default=REPORT_MD, help=f"核验报告输出路径（缺省 {REPORT_MD}）")
     args = ap.parse_args()
@@ -219,7 +260,7 @@ def main() -> int:
             done_rows.append(r)
     query_ids = todo_ids + [r.get("series_id", "").strip() for r in done_rows]
 
-    # 2) 取 catalog
+    # 2) 取目录
     if args.catalog:
         catalog = load_catalog_fixture(args.catalog)
         source_note = args.catalog
@@ -234,7 +275,7 @@ def main() -> int:
             print(f"[h1_verify] ERROR: BLS API 核验失败：{type(exc).__name__}: {exc}", file=sys.stderr)
             return 1
         source_note = BLS_API
-    print(f"[h1_verify] catalog 载入：{len(catalog)} 条命中（{source_note}）", file=sys.stderr)
+    print(f"[h1_verify] 目录载入：{len(catalog)} 条命中（{source_note}）", file=sys.stderr)
 
     # 3) 分类处理
     found, not_found, old_check = [], [], []
@@ -244,17 +285,17 @@ def main() -> int:
         status = (r.get("状态") or "").strip()
         code = sid[len(PREFIX):] if sid.startswith(PREFIX) else sid
         if status == STATUS_TODO:
-            cat = catalog.get(sid) or {}
-            if cat:
-                begin = str(cat.get("begin_year") or "").strip()
+            info = catalog.get(sid)
+            if info and info["title"]:
+                label = begin_year_label(info["earliest"])
                 r["状态"] = STATUS_DONE
-                r["数据起始年份"] = begin
+                r["数据起始年份"] = label
                 found.append({
                     "series_id": sid,
                     "zh": (r.get("中文品类名") or "").strip(),
-                    "series_title": str(cat.get("series_title") or "").strip(),
+                    "series_title": info["title"],
                     "group": (r.get("H1分组") or "").strip(),
-                    "begin_year": begin,
+                    "begin_year": label,
                 })
             else:
                 not_found.append({
@@ -265,13 +306,12 @@ def main() -> int:
                     "note": (r.get("备注") or "").strip(),
                 })
         elif status == STATUS_DONE:
-            cat = catalog.get(sid) or {}
+            info = catalog.get(sid)
             old_check.append({
                 "series_id": sid,
                 "zh": (r.get("中文品类名") or "").strip(),
-                "in_catalog": bool(cat),
-                "catalog_begin": str(cat.get("begin_year") or "").strip(),
-                "mapped_begin": (r.get("数据起始年份") or "").strip(),
+                "in_catalog": bool(info and info["title"]),
+                "earliest": begin_year_label(info["earliest"]) if info else "",
             })
         # 降级/其它状态：不动
 
