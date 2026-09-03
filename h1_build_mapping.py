@@ -371,9 +371,11 @@ def main():
         return 1
 
     # ---- 写 category_mapping.csv（老 12 行原样在前，新行按候选顺序在后）----
-    cols = ["中文品类名", "BLS_item_title", "series_id", "层级", "状态", "数据起始年份", "备注", "H1分组"]
+    cols = ["中文品类名", "BLS_item_title", "series_id", "层级", "状态", "数据起始年份", "数据起始年份_口径", "备注", "H1分组"]
     out_rows = []
     for r in existing:
+        # 老品类「数据起始年份」均为真实 BLS begin_year（历史口径锁定，与新版窗口回填口径不同）
+        r["数据起始年份_口径"] = "真实begin_year"
         out_rows.append(r)
     for code in candidates:
         if code in existing_codes:
@@ -386,6 +388,7 @@ def main():
             "层级": level,
             "状态": "待核实",
             "数据起始年份": "",
+            "数据起始年份_口径": "",  # 待 h1_verify_series.py 回填（新品类必为「窗口最早观测年份」）
             "备注": note,
             "H1分组": group,
         })

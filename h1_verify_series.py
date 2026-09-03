@@ -86,7 +86,7 @@ BLOCK_RECENT = ("2018", "2025")  # 副时间块：覆盖近年新增系列
 TIMEOUT = 60
 
 # category_mapping.csv 的列顺序（写回时固定，避免列序漂移）
-COLS = ["中文品类名", "BLS_item_title", "series_id", "层级", "状态", "数据起始年份", "备注", "H1分组"]
+COLS = ["中文品类名", "BLS_item_title", "series_id", "层级", "状态", "数据起始年份", "数据起始年份_口径", "备注", "H1分组"]
 
 
 def now_iso() -> str:
@@ -290,6 +290,7 @@ def main() -> int:
                 label = begin_year_label(info["earliest"])
                 r["状态"] = STATUS_DONE
                 r["数据起始年份"] = label
+                r["数据起始年份_口径"] = "窗口最早观测年份"
                 found.append({
                     "series_id": sid,
                     "zh": (r.get("中文品类名") or "").strip(),
@@ -313,6 +314,7 @@ def main() -> int:
             # 这里对「已核实但起始年份为空」的项补上（仅空值，不覆盖已有值）。
             if in_cat and label and not (r.get("数据起始年份") or "").strip():
                 r["数据起始年份"] = label
+                r["数据起始年份_口径"] = "窗口最早观测年份"
             old_check.append({
                 "series_id": sid,
                 "zh": (r.get("中文品类名") or "").strip(),
