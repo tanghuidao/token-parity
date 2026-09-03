@@ -1,33 +1,20 @@
 name: daily-parity-index
 
+# 【纯 TEPI】主指数日更工作流。
+# 注意：H1 CPI 世纪图表研究已于 2026-09-03 迁至 abundantics（丰裕学）仓库
+#   research/h1-cpi/ 目录，本仓库不再包含任何 H1 相关内容。
+
 on:
   schedule:
-    # 【高频日更】TEPI 主指数：UTC 00:10 = 北京时间 08:10，每天一次
+    # 高频日更 TEPI 主指数：UTC 00:10 = 北京时间 08:10，每天一次
     - cron: "10 0 * * *"
-    # 【月度低频】H1 CPI 逐月归档：UTC 05:30 = 北京时间 13:30，每月 16 号
-    # BLS 通常每月中旬发布上月 CPI，16 号之后跑确保能拿到上月数据
-    - cron: "30 5 16 * *"
   workflow_dispatch:        # 允许在 Actions 页面手动触发（首次部署/验收时用）
-    inputs:
-      job:
-        description: "选择要运行的 job（仅手动触发生效；cron 触发时按时间自动路由）"
-        required: false
-        type: choice
-        options:
-          - both
-          - update
-          - h1_cpi
-        default: both
 
 permissions:
   contents: write
 
 jobs:
   update:
-    # 日更 cron 或手动选 update/both 时运行；月度 cron 跳过本 job
-    if: |
-      (github.event_name == 'schedule' && github.event.schedule == '10 0 * * *') ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'update' || github.event.inputs.job == 'both'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,33 +39,4 @@ jobs:
           git add parity_series.csv basket_detail.csv parity_index.png docs/
           if [ -d raw ]; then git add raw/; fi
           git commit -m "daily update $(date -u +%F)" || echo "no changes to commit"
-          git push
-
-  h1_cpi_archive:
-    # 月度 cron 或手动选 h1_cpi/both 时运行；日更 cron 跳过本 job
-    if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 5 16 * *') ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'h1_cpi' || github.event.inputs.job == 'both'))
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Fetch H1 CPI monthly archive
-        env:
-          BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
-        run: python h1_cpi_archive.py
-
-      - name: Commit and push
-        run: |
-          git config user.name "parity-bot"
-          git config user.email "parity-bot@users.noreply.github.com"
-          git add raw_h1_cpi/
-          git commit -m "h1 cpi archive $(date -u +%F)" || echo "no changes to commit"
           git push
