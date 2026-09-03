@@ -307,11 +307,17 @@ def main() -> int:
                 })
         elif status == STATUS_DONE:
             info = catalog.get(sid)
+            in_cat = bool(info and info["title"])
+            label = begin_year_label(info["earliest"]) if info else ""
+            # 回填：早期核验轮次（v2 脚本）翻「已核实」时未回填起始年份，
+            # 这里对「已核实但起始年份为空」的项补上（仅空值，不覆盖已有值）。
+            if in_cat and label and not (r.get("数据起始年份") or "").strip():
+                r["数据起始年份"] = label
             old_check.append({
                 "series_id": sid,
                 "zh": (r.get("中文品类名") or "").strip(),
-                "in_catalog": bool(info and info["title"]),
-                "earliest": begin_year_label(info["earliest"]) if info else "",
+                "in_catalog": in_cat,
+                "earliest": label,
             })
         # 降级/其它状态：不动
 
