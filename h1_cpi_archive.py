@@ -25,7 +25,8 @@ H1 世纪图表 CPI 逐月归档（h1_cpi_archive v1.0）
   value 为 "-"（如 2025-10 因政府拨款中断未发布）时原样保留，由后续 analyze 层处理。
 
 归档内容：
-  raw_h1_cpi/YYYY-MM-DD.json（纯 JSON，ensure_ascii=False，未压缩；数据量小无需 gzip）。
+  raw_h1_cpi/YYYY-MM-DD.json（纯 JSON，ensure_ascii=False，紧凑分隔符（无缩进）压缩体积；
+  全样本扩展后 ~130 序列约 3.5MB/月，不需 gzip）。
   结构自描述：archive_date / fetched_at / source / fetch_status / 各序列 meta + 原始 BLS
   series 数据（按 year+period 去重、升序）。当日重复运行覆盖当日文件。
 
@@ -54,7 +55,8 @@ BLS_API = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 MAPPING_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "category_mapping.csv")
 ARCHIVE_DIR = "raw_h1_cpi"
 START_YEAR = 1998          # 世纪图表窗口起点（说明书 A）
-CHUNK_YEARS = 20           # BLS 免费 key 单次请求最大跨度
+CHUNK_YEARS = 20           # BLS 免费 key 单次请求最大跨度（时间维度）
+BLS_BATCH = 50             # BLS v2 带 key 单请求序列数上限（序列维度，跨品类分批）
 TIMEOUT = 60
 UA = "h1-cpi-archive/1.0 (monthly archive; see github.com/tanghuidao/token-parity)"
 # 大学教科书：说明书 A 降级为 SEEA，非确认映射 → 本脚本不抓（只归档 status == 已核实）
@@ -110,19 +112,23 @@ def fetch_chunk(series_ids, key, start_year, end_year) -> list:
 
 
 def fetch_and_merge(series_ids, key, start_year, end_year) -> list:
-    """分块拉取并合并，返回 {series_id: [原始 data points 升序去重]}。"""
+    """分块（时间 ≤20 年）并分批（序列 ≤50）拉取后合并，返回 {series_id: [原始 data points 升序去重]}。"""
     merged = {sid: {} for sid in series_ids}
     cur = start_year
     while cur <= end_year:
         chunk_end = min(cur + CHUNK_YEARS - 1, end_year)
-        print(f"[h1_cpi] fetching {cur}-{chunk_end}...", file=sys.stderr)
-        for r in fetch_chunk(series_ids, key, cur, chunk_end):
-            sid = r.get("seriesID")
-            if sid not in merged:
-                continue
-            for d in r.get("data", []):
-                k = (d.get("year"), d.get("period"))
-                merged[sid][k] = d
+        n_batches = (len(series_ids) - 1) // BLS_BATCH + 1
+        for i in range(0, len(series_ids), BLS_BATCH):
+            batch = series_ids[i:i + BLS_BATCH]
+            print(f"[h1_cpi] fetching {cur}-{chunk_end} batch {i // BLS_BATCH + 1}/{n_batches}...",
+                  file=sys.stderr)
+            for r in fetch_chunk(batch, key, cur, chunk_end):
+                sid = r.get("seriesID")
+                if sid not in merged:
+                    continue
+                for d in r.get("data", []):
+                    k = (d.get("year"), d.get("period"))
+                    merged[sid][k] = d
         cur = chunk_end + 1
     return merged
 
@@ -146,7 +152,7 @@ def write_archive(doc: dict, day: str) -> str:
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
     path = os.path.join(ARCHIVE_DIR, f"{day}.json")
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(doc, f, ensure_ascii=False, indent=2)
+        json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
         f.write("\n")
     return path
 
