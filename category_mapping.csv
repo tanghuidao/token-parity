@@ -148,36 +148,36 @@ CPI总指数,All items,CUUR0000SA0,总指数(level 0),已核实,1913,真实begin
 机票,Airline fares,CUUR0000SETG01,细项(level 3),已核实,≤1998,窗口最早观测年份,⚠️ 自动化生产率高（偏R）但燃油主导且属服务（偏N），不定向,中性
 其他城际交通,Other intercity transportation,CUUR0000SETG02,细项(level 3),已核实,≤1998,窗口最早观测年份,城际巴士/火车/船运，人力服务,N
 市内交通,Intracity transportation,CUUR0000SETG03,细项(level 3),已核实,≤1998,窗口最早观测年份,⚠️ 公交/地铁（偏N）与网约车平台（偏R）混合，不定向,中性
-理发及其他个人护理服务,Haircuts and other personal care services,CUUR0000SEGC01,细项(level 3),待核实,,,现场人力服务（理发/美容），无法库存,N
-法律服务,Legal services,CUUR0000SEGD01,细项(level 3),待核实,,,牌照管制的人力专业服务,N
-殡葬服务,Funeral expenses,CUUR0000SEGD02,细项(level 3),待核实,,,现场人力服务,N
-洗衣与干洗服务,Laundry and dry cleaning services,CUUR0000SEGD03,细项(level 3),待核实,,,现场人力服务（洗衣店）,N
-服装修补与其他服装服务,Apparel services other than laundry and dry cleaning,CUUR0000SEGD04,细项(level 3),待核实,,,现场人力服务（改衣/修补）,N
-金融服务,Financial services,CUUR0000SEGD05,细项(level 3),待核实,,,牌照管制的人力专业服务,N
-机动车车身修理,Motor vehicle body work,CUUR0000SETD01,细项(level 3),待核实,,,现场人力维修服务,N
-机动车维护保养,Motor vehicle maintenance and servicing,CUUR0000SETD02,细项(level 3),待核实,,,现场人力维修服务,N
-机动车维修,Motor vehicle repair,CUUR0000SETD03,细项(level 3),待核实,,,现场人力维修服务,N
-男西装与外套,"Men's suits, sport coats, and outerwear",CUUR0000SEAA01,细项(level 3),待核实,,,可贸易制成品（服装）,R
-男内衣/睡衣/泳装及配饰,"Men's underwear, nightwear, swimwear and accessories",CUUR0000SEAA02,细项(level 3),待核实,,,可贸易制成品（服装）,R
-男衬衫与毛衣,Men's shirts and sweaters,CUUR0000SEAA03,细项(level 3),待核实,,,可贸易制成品（服装）,R
-男裤与短裤,Men's pants and shorts,CUUR0000SEAA04,细项(level 3),待核实,,,可贸易制成品（服装）,R
-女外套,Women's outerwear,CUUR0000SEAC01,细项(level 3),待核实,,,可贸易制成品（服装）,R
-女连衣裙,Women's dresses,CUUR0000SEAC02,细项(level 3),待核实,,,可贸易制成品（服装）,R
-女套装与单件,Women's suits and separates,CUUR0000SEAC03,细项(level 3),待核实,,,可贸易制成品（服装）,R
-女内衣/睡衣/泳装及配饰,"Women's underwear, nightwear, swimwear and accessories",CUUR0000SEAC04,细项(level 3),待核实,,,可贸易制成品（服装）,R
-地面覆盖物,Floor coverings,CUUR0000SEHH01,细项(level 3),待核实,,,可贸易制成品（家居）,R
-窗帘与窗饰,Window coverings,CUUR0000SEHH02,细项(level 3),待核实,,,可贸易制成品（家居）,R
-其他家纺布艺,Other linens,CUUR0000SEHH03,细项(level 3),待核实,,,可贸易制成品（家居）,R
-卧室家具,Bedroom furniture,CUUR0000SEHJ01,细项(level 3),待核实,,,可贸易制成品（家居耐用）,R
-客厅/厨房/餐厅家具,"Living room, kitchen, and dining room furniture",CUUR0000SEHJ02,细项(level 3),待核实,,,可贸易制成品（家居耐用）,R
-其他家具,Other furniture,CUUR0000SEHJ03,细项(level 3),待核实,,,可贸易制成品（家居耐用）,R
-大家电,Major appliances,CUUR0000SEHK01,细项(level 3),待核实,,,可贸易制成品（耐用电子）,R
-其他家电,Other appliances,CUUR0000SEHK02,细项(level 3),待核实,,,可贸易制成品（耐用电子）,R
-钟表灯具装饰品,"Clocks, lamps, and decorator items",CUUR0000SEHL01,细项(level 3),待核实,,,可贸易制成品,R
-餐具,Dishes and flatware,CUUR0000SEHL03,细项(level 3),待核实,,,可贸易制成品,R
-非电炊具与餐具,Nonelectric cookware and tableware,CUUR0000SEHL04,细项(level 3),待核实,,,可贸易制成品,R
-工具五金耗材,"Tools, hardware and supplies",CUUR0000SEHM01,细项(level 3),待核实,,,可贸易制成品,R
-户外装备与耗材,Outdoor equipment and supplies,CUUR0000SEHM02,细项(level 3),待核实,,,可贸易制成品,R
-轮胎,Tires,CUUR0000SETC01,细项(level 3),待核实,,,可贸易制成品,R
-汽车配件（除轮胎）,Vehicle accessories other than tires,CUUR0000SETC02,细项(level 3),待核实,,,可贸易制成品,R
-室内植物花卉,Indoor plants and flowers,CUUR0000SEHL02,细项(level 3),待核实,,,⚠️ 鲜活易腐、本地生产为主，混合不定向（不机械继承父类R）,中性
+理发及其他个人护理服务,Haircuts and other personal care services,CUUR0000SEGC01,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力服务（理发/美容），无法库存,N
+法律服务,Legal services,CUUR0000SEGD01,细项(level 3),已核实,≤1998,窗口最早观测年份,牌照管制的人力专业服务,N
+殡葬服务,Funeral expenses,CUUR0000SEGD02,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力服务,N
+洗衣与干洗服务,Laundry and dry cleaning services,CUUR0000SEGD03,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力服务（洗衣店）,N
+服装修补与其他服装服务,Apparel services other than laundry and dry cleaning,CUUR0000SEGD04,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力服务（改衣/修补）,N
+金融服务,Financial services,CUUR0000SEGD05,细项(level 3),已核实,≤1998,窗口最早观测年份,牌照管制的人力专业服务,N
+机动车车身修理,Motor vehicle body work,CUUR0000SETD01,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力维修服务,N
+机动车维护保养,Motor vehicle maintenance and servicing,CUUR0000SETD02,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力维修服务,N
+机动车维修,Motor vehicle repair,CUUR0000SETD03,细项(level 3),已核实,≤1998,窗口最早观测年份,现场人力维修服务,N
+男西装与外套,"Men's suits, sport coats, and outerwear",CUUR0000SEAA01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+男内衣/睡衣/泳装及配饰,"Men's underwear, nightwear, swimwear and accessories",CUUR0000SEAA02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+男衬衫与毛衣,Men's shirts and sweaters,CUUR0000SEAA03,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+男裤与短裤,Men's pants and shorts,CUUR0000SEAA04,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+女外套,Women's outerwear,CUUR0000SEAC01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+女连衣裙,Women's dresses,CUUR0000SEAC02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+女套装与单件,Women's suits and separates,CUUR0000SEAC03,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+女内衣/睡衣/泳装及配饰,"Women's underwear, nightwear, swimwear and accessories",CUUR0000SEAC04,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（服装）,R
+地面覆盖物,Floor coverings,CUUR0000SEHH01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（家居）,R
+窗帘与窗饰,Window coverings,CUUR0000SEHH02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（家居）,R
+其他家纺布艺,Other linens,CUUR0000SEHH03,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（家居）,R
+卧室家具,Bedroom furniture,CUUR0000SEHJ01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（家居耐用）,R
+客厅/厨房/餐厅家具,"Living room, kitchen, and dining room furniture",CUUR0000SEHJ02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（家居耐用）,R
+其他家具,Other furniture,CUUR0000SEHJ03,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（家居耐用）,R
+大家电,Major appliances,CUUR0000SEHK01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（耐用电子）,R
+其他家电,Other appliances,CUUR0000SEHK02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品（耐用电子）,R
+钟表灯具装饰品,"Clocks, lamps, and decorator items",CUUR0000SEHL01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+餐具,Dishes and flatware,CUUR0000SEHL03,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+非电炊具与餐具,Nonelectric cookware and tableware,CUUR0000SEHL04,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+工具五金耗材,"Tools, hardware and supplies",CUUR0000SEHM01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+户外装备与耗材,Outdoor equipment and supplies,CUUR0000SEHM02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+轮胎,Tires,CUUR0000SETC01,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+汽车配件（除轮胎）,Vehicle accessories other than tires,CUUR0000SETC02,细项(level 3),已核实,≤1998,窗口最早观测年份,可贸易制成品,R
+室内植物花卉,Indoor plants and flowers,CUUR0000SEHL02,细项(level 3),已核实,≤1998,窗口最早观测年份,⚠️ 鲜活易腐、本地生产为主，混合不定向（不机械继承父类R）,中性

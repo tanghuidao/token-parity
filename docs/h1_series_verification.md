@@ -1,9 +1,9 @@
 # H1 品类 seriesID 核验报告
 
-- 核验时间：2026-09-03T03:10:02Z
+- 核验时间：2026-09-03T04:22:51Z
 - 数据源：BLS v2 API（`https://api.bls.gov/publicAPI/v2/timeseries/data/`，`catalog=true`，口径 CUUR0000 全国 CPI-U 未季调）
-- 核验对象：category_mapping.csv 中「待核实」的 0 个 seriesID
-- 结论：✅ 通过 0 项 / ⚠️ 未通过 0 项
+- 核验对象：category_mapping.csv 中「待核实」的 33 个 seriesID
+- 结论：✅ 通过 33 项 / ⚠️ 未通过 0 项
 - 说明：「数据起始年份」回填的是世纪窗口内最早观测年份（窗口起点 1998，BLS CPI 1998 细项目录重组）；≤1998 表示真实 begin_year ≤ 1998，BLS v2 API catalog 不提供真实 begin_year
 
 ## 一、未通过核验（需人工复核，seriesID 在 BLS 目录中不存在）
@@ -12,7 +12,41 @@
 
 ## 二、通过核验（已转正为「已核实」，并回填起始年份）
 
-（无）
+| series_id | 中文品类名 | 官方 series_title | H1分组 | 起始年份 |
+|---|---|---|---|---|
+| `CUUR0000SEGC01` | 理发及其他个人护理服务 | Haircuts and other personal care services in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SEGD01` | 法律服务 | Legal services in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SEGD02` | 殡葬服务 | Funeral expenses in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SEGD03` | 洗衣与干洗服务 | Laundry and dry cleaning services in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SEGD04` | 服装修补与其他服装服务 | Apparel services other than laundry and dry cleaning in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SEGD05` | 金融服务 | Financial services in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SETD01` | 机动车车身修理 | Motor vehicle body work in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SETD02` | 机动车维护保养 | Motor vehicle maintenance and servicing in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SETD03` | 机动车维修 | Motor vehicle repair in U.S. city average, all urban consumers, not seasonally adjusted | N | ≤1998 |
+| `CUUR0000SEAA01` | 男西装与外套 | Men's suits, sport coats, and outerwear in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAA02` | 男内衣/睡衣/泳装及配饰 | Men's underwear, nightwear, swimwear, and accessories in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAA03` | 男衬衫与毛衣 | Men's shirts and sweaters in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAA04` | 男裤与短裤 | Men's pants and shorts in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAC01` | 女外套 | Women's outerwear in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAC02` | 女连衣裙 | Women's dresses in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAC03` | 女套装与单件 | Women's suits and separates in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEAC04` | 女内衣/睡衣/泳装及配饰 | Women's underwear, nightwear, swimwear, and accessories in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHH01` | 地面覆盖物 | Floor coverings in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHH02` | 窗帘与窗饰 | Window coverings in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHH03` | 其他家纺布艺 | Other linens in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHJ01` | 卧室家具 | Bedroom furniture in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHJ02` | 客厅/厨房/餐厅家具 | Living room, kitchen, and dining room furniture in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHJ03` | 其他家具 | Other furniture in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHK01` | 大家电 | Major appliances in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHK02` | 其他家电 | Other appliances in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHL01` | 钟表灯具装饰品 | Clocks, lamps, and decorator items in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHL03` | 餐具 | Dishes and flatware in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHL04` | 非电炊具与餐具 | Nonelectric cookware and tableware in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHM01` | 工具五金耗材 | Tools, hardware and supplies in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHM02` | 户外装备与耗材 | Outdoor equipment and supplies in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SETC01` | 轮胎 | Tires in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SETC02` | 汽车配件（除轮胎） | Vehicle accessories other than tires in U.S. city average, all urban consumers, not seasonally adjusted | R | ≤1998 |
+| `CUUR0000SEHL02` | 室内植物花卉 | Indoor plants and flowers in U.S. city average, all urban consumers, not seasonally adjusted | 中性 | ≤1998 |
 
 ## 三、老品类「已核实」sanity check（不动，仅复核存在性）
 
