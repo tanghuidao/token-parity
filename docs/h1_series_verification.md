@@ -1,6 +1,6 @@
 # H1 品类 seriesID 核验报告
 
-- 核验时间：2026-09-03T03:04:58Z
+- 核验时间：2026-09-03T03:10:02Z
 - 数据源：BLS v2 API（`https://api.bls.gov/publicAPI/v2/timeseries/data/`，`catalog=true`，口径 CUUR0000 全国 CPI-U 未季调）
 - 核验对象：category_mapping.csv 中「待核实」的 0 个 seriesID
 - 结论：✅ 通过 0 项 / ⚠️ 未通过 0 项
