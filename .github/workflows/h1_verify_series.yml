@@ -19,9 +19,11 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Verify series IDs against BLS cu.series
+      - name: Verify series IDs against BLS v2 API
         id: verify
         run: python h1_verify_series.py
+        env:
+          BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
         continue-on-error: true        # 有未通过项时仍要提交报告，不中断
 
       - name: Commit and push verification result
